@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Винная Карта — WineLink</title>
+<link href="https://fonts.googleapis.com/css?family=Alegreya+SC:500,700&display=swap" rel="stylesheet">
+<style>
+body { margin:0; padding:0; min-height:100vh; font-family:'Alegreya SC', sans-serif; background:#faf7f0; color:#333; display:flex; flex-direction:column; }
+header { width:100%; text-align:center; padding:10px 0; background:#fff; border-bottom:1px solid #ddd; position:sticky; top:0; z-index:10; }
+main { flex:1; padding:15px; }
+h1 { font-size:1.6rem; text-align:center; margin-bottom:15px; background: #6f0a0a; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+.filters { display:flex; gap:10px; padding:10px; overflow-x:auto; background:#fff; border-radius:12px; box-shadow:0 2px 6px rgba(0,0,0,0.08); margin-bottom:15px; scrollbar-width:none; }
+.filters::-webkit-scrollbar { display:none; }
+.filter-box { flex:0 0 auto; min-width:140px; display:flex; flex-direction:column; background:#fafafa; padding:8px; border-radius:8px; border:1px solid #ddd; transition:background 0.4s ease, border-color 0.4s ease; text-align:center; }
+.filter-box label { font-size:0.75rem; font-weight:bold; margin-bottom:4px; display:flex; flex-direction:column; align-items:center; }
+.filter-box select, .filter-box input[type="text"] { padding:6px; font-size:0.9rem; border-radius:6px; border:1px solid #ccc; background:#fff; font-family:inherit; appearance:none; width:100%; box-sizing:border-box; }
+
+.filter-box.red-highlight { background:#ffd6d6; border-color:#ff8080; }
+.filter-box.white-highlight { background:#ffffcc; border-color:#ffff80; }
+.filter-box.pink-highlight { background:#ffd6e6; border-color:#b66585; }
+
+/* для чекбокса игристого */
+.filter-box input[type="checkbox"] { margin-top:6px; transform:scale(1.2); cursor:pointer; }
+
+.wine-list-sorted .group-title {
+    font-weight:700;
+    font-size:1.1rem;
+    margin:12px 0 6px;
+    color:#2c3e50;
+    border-left:4px solid #2980b9;
+    padding-left:8px;
+    background:#ecf0f1;
+    border-radius:4px;
+}
+.wine-list-sorted .group-title.sub {
+    font-weight:600;
+    font-size:0.95rem;
+    margin:6px 0 4px 20px;
+    color:#34495e;
+    border-left:3px solid #3498db;
+    padding-left:6px;
+    background:#f7f9fa;
+}
+
+.wine-list, .wine-list-sorted { display:flex; flex-direction:column; gap:10px; }
+
+.wine-card {
+    background:#fff;
+    border-radius:12px;
+    padding:10px 14px;
+    box-shadow:0 4px 12px rgba(0,0,0,0.08);
+    cursor:pointer;
+    transition:transform 0.25s ease, box-shadow 0.25s ease, opacity 0.4s ease, border 0.25s ease;
+    opacity:0;
+    transform:translateY(15px) scale(0.98);
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    border:2px solid transparent;
+}
+.wine-card.show { opacity:1; transform:translateY(0) scale(1); }
+.wine-card:hover { transform:scale(1.04); box-shadow:0 6px 18px rgba(0,0,0,0.12); }
+
+/* выделяем игристое бордюром */
+.wine-card.sparkling { border-color:#ffd700; }
+
+.wine-card.sub {
+    padding:8px 10px;
+    font-size:0.85rem;
+    border-radius:10px;
+    box-shadow:0 2px 6px rgba(0,0,0,0.06);
+}
+.wine-card.sub.show { transform:translateY(0) scale(0.97); }
+
+.wine-card h3 { font-size:1rem; margin:0; font-weight:700; line-height:1.2; }
+.wine-card .main-info { font-size:0.9rem; color:#333; font-weight:500; }
+.wine-card .extra-info { font-size:0.8rem; color:#777; }
+.bold { font-weight:bold; }
+</style>
+</head>
+<body>
+<header>
+    <img src="static/logo.jpg" alt="VineLink" style="max-width:150px;">
+</header>
+<main>
+<h1>Винная Карта</h1>
+
+<div class="filters">
+    <div class="filter-box">
+        <label>Поиск</label>
+        <input id="filter-name" type="text" placeholder="Имя вина">
+    </div>
+    <div class="filter-box">
+        <label>Страна</label>
+        <select id="filter-country" multiple></select>
+    </div>
+    <div class="filter-box" id="filter-color-box">
+        <label>Цвет</label>
+        <select id="filter-color" multiple></select>
+    </div>
+    <div class="filter-box">
+        <label>Сахар</label>
+        <select id="filter-sugar" multiple></select> 
+    </div>
+    <div class="filter-box">
+        <label>Регион</label>
+        <select id="filter-region" multiple></select>
+    </div>
+    <div class="filter-box">
+        <label>Сорт винограда</label>
+        <select id="filter-grape" multiple></select>
+    </div>
+    <!-- Новый фильтр -->
+    <div class="filter-box">
+        <label>
+            <input type="checkbox" id="filter-sparkling">
+            Игристое
+        </label>
+    </div>
+</div>
+
+<p>Нажимайте на карточки, чтобы узнать больше &darr;</p>
+<div class="wine-list"></div>
+<div class="wine-list-sorted"></div>
+
+<p>версия сайта: 1.1a</p>
+<p>winelink сделан с душой <span class="bold">Lavroovich-ем</span></p>
+
+<script>
+// мапы
+const countryMap = { 
+    russia:"🇷🇺 Россия", usa:"🇺🇸 США", ukraine:"🇺🇦 Украина", france:"🇫🇷 Франция", italy:"🇮🇹 Италия", 
+    spain:"🇪🇸 Испания", germany:"🇩🇪 Германия", new_zealand:"🇳🇿 Новая Зеландия", georgia:"🇬🇪 Грузия", 
+    brazil:"🇧🇷 Бразилия", australia:"🇦🇺 Австралия", aurstria:"🇦🇹 Австрия", argentina:"🇦🇷 Аргентина", 
+    south_africa:"🇿🇦 Южная Африка", serbia: "🇷🇸 Сербия" 
+};
+const colorMap = { red:"Красное", white:"Белое", pink:"Розовое" };
+const sugarMap = { dry:"Сухое", semidry:"Полусухое", brut: "Брют" , sweet:"Сладкое" };
+
+// получаем данные из шаблона
+const allVines = {{ vines|tojson }};
+
+// фикс для undefined sparkling
+allVines.forEach(v => {
+    if(!v.sparkling) v.sparkling = "no"; // если undefined, подставляем no
+});
+
+const list = document.querySelector('.wine-list');
+const sortedList = document.querySelector('.wine-list-sorted');
+
+const selects = { 
+    country: document.querySelector('#filter-country'), 
+    color: document.querySelector('#filter-color'), 
+    region: document.querySelector('#filter-region'), 
+    grape: document.querySelector('#filter-grape'),
+    sugar: document.querySelector('#filter-sugar')
+};
+
+let filteredVines = allVines.slice();
+
+// функции утилиты
+function getUniqueValues(vines, field){ 
+    if(field==="grape") return [...new Set(vines.flatMap(v=>v.grape||[]))]; 
+    return [...new Set(vines.map(v=>v[field]).filter(x=>x))]; 
+}
+
+function getSelectedValues(select){ 
+    return Array.from(select.selectedOptions).map(o=>o.value); 
+}
+
+function populateSelect(select, values, map){ 
+    const current = getSelectedValues(select);
+    select.innerHTML = '';
+    values.sort((a,b)=>{
+        const textA = (map ? map[a] || a : a).toString().toLowerCase();
+        const textB = (map ? map[b] || b : b).toString().toLowerCase();
+        return textA.localeCompare(textB, 'ru');
+    });
+    values.forEach(val=>{
+        const option=document.createElement('option');
+        option.value=val;
+        option.textContent=map?map[val]||val:val;
+        if(current.includes(val)) option.selected=true;
+        select.appendChild(option);
+    });
+}
+
+function animateCards(cards){ 
+    cards.forEach((c,i)=>setTimeout(()=>c.classList.add('show'), i*50)); 
+}
+
+function renderVines(vines){
+    list.innerHTML='';
+    if(!vines.length){ 
+        list.innerHTML='<p style="text-align:center;font-weight:bold;">Всё — не найдено 😢</p>'; 
+        return; 
+    }
+    const cards=[];
+    vines.forEach(v=>{
+        const grapes = v.grape && v.grape.length ? v.grape.join(", ") : "—";
+        const sugar = sugarMap[v.sugar] || v.sugar || "—";
+        const card = document.createElement('div'); 
+        card.className='wine-card';
+        if(v.sparkling==="yes") card.classList.add('sparkling'); // выделяем игристое
+        card.dataset.pdf=v.pdf_file;
+        card.innerHTML = `
+            <h3>${v.name}</h3>
+            <div class="main-info">${countryMap[v.country]||v.country} • ${colorMap[v.color]||v.color} • ${sugar}</div>
+            <div class="extra-info">Регион: ${v.region||"—"} | Сорт винограда: ${grapes}</div>
+        `;
+        list.appendChild(card); 
+        cards.push(card);
+        card.addEventListener('click',()=>window.open('/vinery/'+v.pdf_file,'_blank'));
+    });
+    requestAnimationFrame(()=>animateCards(cards));
+}
+
+function filterVines(){
+    list.innerHTML=''; 
+    sortedList.innerHTML='';
+
+    const name = document.querySelector('#filter-name').value.toLowerCase();
+    const countries = getSelectedValues(selects.country);
+    const colors = getSelectedValues(selects.color);
+    let regions = getSelectedValues(selects.region);
+    const grapes = getSelectedValues(selects.grape);
+    const sugars = getSelectedValues(selects.sugar);
+    const sparklingChecked = document.querySelector('#filter-sparkling').checked;
+
+    // вычисляем доступные регионы после фильтра
+    const allowedRegions = allVines
+        .filter(v => (!sparklingChecked || v.sparkling==="yes") &&
+                     (countries.length===0 || countries.includes(v.country)))
+        .map(v=>v.region)
+        .filter(r=>r);
+    regions = regions.filter(r=>allowedRegions.includes(r));
+
+    filteredVines = allVines.filter(v=>
+        (!name || v.name.toLowerCase().includes(name)) &&
+        (countries.length===0 || countries.includes(v.country)) &&
+        (colors.length===0 || colors.includes(v.color)) &&
+        (regions.length===0 || regions.includes(v.region)) &&
+        (grapes.length===0 || (v.grape||[]).some(g=>grapes.includes(g))) &&
+        (sugars.length===0 || sugars.includes(v.sugar)) &&
+        (!sparklingChecked || v.sparkling==="yes") // фильтр игристого
+    );
+
+    populateSelect(selects.region, [...new Set(allowedRegions)]);
+    renderVines(filteredVines);
+    updateSorted();
+}
+
+function renderSortedVines(vines,criterion){
+    sortedList.innerHTML=''; 
+    if(!criterion) return;
+
+    let primaryKey='country', secondaryKey='color', secondaryMap=colorMap;
+
+    const groups={};
+    vines.forEach(v=>{
+        const pKey = v[primaryKey]||'—';
+        const sKey = v[secondaryKey]||'—';
+        groups[pKey] = groups[pKey]||{};
+        groups[pKey][sKey] = groups[pKey][sKey]||[];
+        groups[pKey][sKey].push(v);
+    });
+
+    Object.keys(groups).sort((a,b)=>Object.values(groups[b]).flat().length-Object.values(groups[a]).flat().length).forEach(pKey=>{
+        const primaryTitle = document.createElement('div'); 
+        primaryTitle.className='group-title'; 
+        primaryTitle.textContent = countryMap[pKey]||pKey;
+        sortedList.appendChild(primaryTitle);
+
+        Object.keys(groups[pKey]).sort((a,b)=>groups[pKey][b].length-groups[pKey][a].length).forEach(sKey=>{
+            const secondaryTitle = document.createElement('div'); 
+            secondaryTitle.className='group-title sub'; 
+            secondaryTitle.textContent = secondaryMap[sKey]||sKey;
+            sortedList.appendChild(secondaryTitle);
+
+            groups[pKey][sKey].forEach(v=>{
+                const grapes=v.grape&&v.grape.length?v.grape.join(", "):"—";
+                const sugar = sugarMap[v.sugar] || v.sugar || "—";
+                const card=document.createElement('div'); 
+                card.className='wine-card sub';
+                if(v.sparkling==="yes") card.classList.add('sparkling'); // игристое
+                card.innerHTML = `
+                    <h3>${v.name}</h3>
+                    <div class="main-info">${countryMap[v.country]||v.country} • ${colorMap[v.color]||v.color} • ${sugar}</div>
+                    <div class="extra-info">Регион: ${v.region||"—"} | Сорт винограда: ${grapes}</div>
+                `;
+                sortedList.appendChild(card);
+                card.addEventListener('click',()=>window.open('/vinery/'+v.pdf_file,'_blank'));
+                requestAnimationFrame(()=>card.classList.add('show'));
+            });
+        });
+    });
+}
+
+function updateSorted(){ 
+    list.style.display='none'; 
+    sortedList.style.display='flex'; 
+    renderSortedVines(filteredVines,"country+color");
+}
+
+function updateColorHighlight(){
+    const colorBox=document.getElementById('filter-color-box');
+    colorBox.classList.remove("red-highlight","white-highlight","pink-highlight");
+    const colors=getSelectedValues(selects.color);
+    if(colors.includes("red")) colorBox.classList.add("red-highlight");
+    else if(colors.includes("white")) colorBox.classList.add("white-highlight");
+    else if(colors.includes("pink")) colorBox.classList.add("pink-highlight");
+}
+
+// populate selects
+populateSelect(selects.country,getUniqueValues(allVines,'country'),countryMap);
+populateSelect(selects.color,getUniqueValues(allVines,'color'),colorMap);
+populateSelect(selects.region,getUniqueValues(allVines,'region'));
+populateSelect(selects.grape,getUniqueValues(allVines,'grape'));
+populateSelect(selects.sugar,getUniqueValues(allVines,'sugar'),sugarMap);
+
+// рендер
+renderVines(allVines);
+updateSorted();
+
+// события
+document.querySelectorAll('.filters input, .filters select').forEach(el=>{
+    el.addEventListener('input',()=>{
+        filterVines(); 
+        updateColorHighlight();
+    });
+});
+</script>
+</main>
+</body>
+</html>

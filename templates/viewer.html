@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PDF — WineLink</title>
+<link href="https://fonts.googleapis.com/css?family=Alegreya+SC:500,700&display=swap" rel="stylesheet">
+<style>
+html, body {
+    margin:0;
+    padding:0;
+    height:100dvh; /* учитывает адресную строку на мобилках */
+    font-family:'Alegreya SC', sans-serif;
+    display:flex;
+    flex-direction:column;
+    background:#faf7f0;
+}
+
+header {
+    width:100%;
+    text-align:center;
+    padding:15px 0;
+    background:#fff;
+    border-bottom:1px solid #ddd;
+    position:sticky;
+    top:0;
+    z-index:20;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:10px;
+}
+
+header img { max-width:150px; }
+
+header a button {
+    padding:10px 24px;
+    font-size:1rem;
+    font-weight:bold;
+    cursor:pointer;
+    border:none;
+    border-radius:12px;
+    background:#6f0a0a;
+    color:#fff;
+    box-shadow:0 4px 10px rgba(0,0,0,0.15);
+    transition:transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+header a button:hover {
+    transform:scale(1.05);
+    box-shadow:0 6px 14px rgba(0,0,0,0.2);
+}
+
+main {
+    flex:1;
+    display:flex;
+    overflow:hidden; /* iframe будет сам масштабировать PDF */
+}
+
+iframe {
+    flex:1;
+    width:100%;
+    height:100%;
+    border:none;
+}
+</style>
+</head>
+<body>
+<header>
+    <img src="/static/logo.jpg" alt="VineLink">
+    <a href="/"><button>Винная Карта</button></a>
+</header>
+<main>
+    <!-- #zoom=page-fit делает так, чтобы PDF полностью помещался -->
+    <iframe src="{{ url_for('pdfs', filename=filename) }}#zoom=page-fit" allowfullscreen></iframe>
+</main>
+</body>
+</html>

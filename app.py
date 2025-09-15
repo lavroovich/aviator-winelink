@@ -2,7 +2,7 @@ import os
 import json
 import qrcode
 from io import BytesIO
-from flask import Flask, render_template, send_from_directory, send_file
+from flask import Flask, render_template, send_from_directory, send_file, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
@@ -33,7 +33,18 @@ class Vine(database.Model):
 
 # ----- Роуты -----
 @app.route("/")
+def welcome():
+    return render_template("welcome.html")
+
+@app.route("/winery/")
 def catalog():
+    
+    applyed_filters=request.args.get("applyed_filters", "")
+    if applyed_filters:
+        applyed_filters = json.loads(applyed_filters)
+    else:
+        applyed_filters = {}
+    
     vines = Vine.query.all()
     vines_list = []
     for v in vines:
@@ -54,7 +65,81 @@ def catalog():
             "sparkling": v.sparkling
         })
 
-    return render_template("catalog.html", vines=vines_list)
+    return render_template("catalog.html", vines=vines_list, applyed_filters=applyed_filters)
+
+@app.route("/status.json")
+def status_json():
+    # ENV and DB mode
+    env = "vercel" if os.getenv("VERCEL") else "local"
+    db_mode = "ro" if os.getenv("VERCEL") else "rw"
+
+    # Try DB connectivity and collect stats safely
+    ok = True
+    details = {}
+    try:
+        vines = Vine.query.all()
+        details["vines_total"] = len(vines)
+
+        # counts and uniques
+        colors = {}
+        sparkling_yes = 0
+        countries = set()
+        regions = set()
+        grapes_set = set()
+        sugars_set = set()
+        for v in vines:
+            colors[v.color] = colors.get(v.color, 0) + 1
+            if getattr(v, "sparkling", "no") == "yes":
+                sparkling_yes += 1
+            if v.country:
+                countries.add(v.country)
+            if v.region:
+                regions.add(v.region)
+            if v.sugar:
+                sugars_set.add(v.sugar)
+            # v.grape is JSON array or string
+            try:
+                gs = json.loads(v.grape) if v.grape else []
+                if isinstance(gs, list):
+                    for g in gs:
+                        grapes_set.add(str(g))
+                elif isinstance(gs, str) and gs:
+                    grapes_set.add(gs)
+            except Exception:
+                if v.grape:
+                    grapes_set.add(str(v.grape))
+
+        details["colors"] = colors
+        details["sparkling_yes"] = sparkling_yes
+        details["countries_total"] = len(countries)
+        details["regions_total"] = len(regions)
+        details["grapes_total"] = len(grapes_set)
+        details["sugars_present"] = sorted(list(sugars_set))
+
+        # filesystem checks for PDFs
+        try:
+            pdfs_dir = os.path.join(app.root_path, "pdfs")
+            fs_files = set(os.listdir(pdfs_dir)) if os.path.isdir(pdfs_dir) else set()
+            db_files = set(v.pdf_file for v in vines if v.pdf_file)
+            missing = sorted(list(db_files - fs_files))
+            extra = sorted(list(fs_files - db_files))
+            details["pdfs_in_dir"] = len(fs_files)
+            details["pdfs_missing"] = missing
+            details["pdfs_extra"] = extra
+        except Exception:
+            # ignore FS errors
+            pass
+    except Exception:
+        ok = False
+
+    payload = {
+        "env": env,
+        "db_mode": db_mode,
+        "db_connected": ok,
+        "version": "1.1a",
+        "details": details,
+    }
+    return jsonify(payload)
 
 @app.route("/dev-only/upload-test-vines")
 def upload_test_vines():

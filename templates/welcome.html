@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WineLink — Добро пожаловать</title>
+  <link href="https://fonts.googleapis.com/css?family=Alegreya+SC:500,700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #faf7f0;
+      --fg: #333;
+      --card: #fff;
+      --shadow: 0 4px 12px rgba(0,0,0,0.08);
+      --radius: 14px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin:0; padding:0; min-height:100vh;
+      font-family:'Alegreya SC', sans-serif;
+      background:var(--bg); color:var(--fg);
+      display:flex; flex-direction:column;
+    }
+    header {
+      width:100%; text-align:center; padding:10px 0;
+      background:#fff; border-bottom:1px solid #ddd;
+      position:sticky; top:0; z-index:10;
+    }
+    main { flex:1; padding:18px; max-width:1100px; margin:0 auto; width:100%; }
+    h1 {
+      font-size:1.8rem; text-align:center; margin:12px 0 18px;
+      background:#6f0a0a; -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+    }
+
+    .intro {
+      display:flex; align-items:center; justify-content:space-between;
+      gap:16px; margin:0 auto 18px; width:100%; flex-wrap:wrap;
+    }
+    .intro .card {
+      flex:1 1 320px; background:var(--card); border:1px solid #e5e2da;
+      border-radius:var(--radius); padding:16px; box-shadow:var(--shadow);
+    }
+    .intro .card p { margin:0; font-size:1.05rem; line-height:1.3; opacity:0.9; }
+    .intro .status {
+      flex:0 0 260px; background:#0f172a; color:#e2e8f0; border-radius:var(--radius);
+      padding:14px 16px; box-shadow:0 6px 20px rgba(15,23,42,.15);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+    .intro .status .row { display:flex; justify-content:space-between; gap:12px; font-size:.9rem; }
+    .intro .status .ok { color:#10b981; }
+    .intro .status .dim { color:#94a3b8; }
+    .intro .status.hidden { display:none; }
+    .intro .status .label { color:#94a3b8; }
+    .intro .status .val { color:#e2e8f0; }
+    .intro .status .warn { color:#f59e0b; }
+    .intro .status .err  { color:#ef4444; }
+
+    .tiles {
+      display:grid; gap:14px; margin:18px 0 8px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+    .tile {
+      display:block; text-decoration:none; color:inherit;
+      background:var(--card); border:1px solid #ddd; border-radius:var(--radius);
+      padding:18px; box-shadow:var(--shadow);
+      transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease;
+      position:relative; overflow:hidden;
+    }
+    .tile:hover { transform:translateY(-2px) scale(1.02); box-shadow:0 8px 20px rgba(0,0,0,0.12); }
+    .tile h2 { margin:0 0 6px; font-size:1.2rem; }
+    .tile .hint { margin:0; font-size:.95rem; opacity:.8; }
+
+    .tile.red {
+      background:linear-gradient(135deg,#fff0f0,#ffe5e5);
+      border-color:#ffb3b3;
+    }
+    .tile.white {
+      background:linear-gradient(135deg,#fffff0,#fffbe6);
+      border-color:#ffe680;
+    }
+    .tile.pink {
+      background:linear-gradient(135deg,#ffe6f0,#ffd9e8);
+      border-color:#f5a5c2;
+    }
+    .tile.sparkling {
+      background:linear-gradient(135deg,#fff9e0,#fff2b6);
+      border-color:#ffd700;
+      box-shadow:0 4px 16px rgba(255,215,0,0.25);
+    }
+    .tile.all {
+      background:linear-gradient(135deg,#f4f4f4,#e9e9e9);
+      border-color:#d0d0d0; color:#555;
+    }
+
+    .foot {
+      text-align:center; margin-top:16px; opacity:.8; font-size:.95rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <img id="app-logo" src="static/logo.jpg" alt="logo" style="max-width:150px; cursor:pointer;" title="Трипл-тап: показать состояние">
+  </header>
+  <main>
+    <h1>Винная Карта</h1>
+
+    <div class="intro">
+      <div class="card">
+        <p>Выберите категорию — мы подготовим фильтры и откроем каталог. Всё аккуратно, повторяем стиль карточек и фильтров.</p>
+      </div>
+      <div id="sys-status" class="status hidden" aria-label="Состояние системы">
+        <div class="row"><span class="label">ENV</span><span class="val" id="st-env">—</span></div>
+        <div class="row"><span class="label">DB</span><span class="val" id="st-db">—</span></div>
+        <div class="row"><span class="label">Каталог</span><span class="val" id="st-vines">—</span></div>
+        <div class="row"><span class="label">Цвета</span><span class="val" id="st-colors">—</span></div>
+        <div class="row"><span class="label">География</span><span class="val" id="st-geo">—</span></div>
+        <div class="row"><span class="label">Сорта</span><span class="val" id="st-grapes">—</span></div>
+        <div class="row"><span class="label">Сладость</span><span class="val" id="st-sugars">—</span></div>
+        <div class="row"><span class="label">PDF</span><span class="val" id="st-pdfs">—</span></div>
+        <div class="row"><span class="label">Версия</span><span class="val" id="st-ver">—</span></div>
+      </div>
+    </div>
+
+    <div class="tiles">
+      <a class="tile red" href="/winery/?applyed_filters=%7B%22color%22%3A%5B%22red%22%5D%7D">
+        <h2>🍷 Красные вина</h2>
+        <p class="hint">Откроется каталог с цветом: красное</p>
+      </a>
+      <a class="tile white" href="/winery/?applyed_filters=%7B%22color%22%3A%5B%22white%22%5D%7D">
+        <h2>🥂 Белые вина</h2>
+        <p class="hint">Откроется каталог с цветом: белое</p>
+      </a>
+      <a class="tile pink" href="/winery/?applyed_filters=%7B%22color%22%3A%5B%22pink%22%5D%7D">
+        <h2>🌸 Розовые вина</h2>
+        <p class="hint">Откроется каталог с цветом: розовое</p>
+      </a>
+      <a class="tile sparkling" href="/winery/?applyed_filters=%7B%22sparkling%22%3Atrue%7D">
+        <h2>🍾✨ Игристые вина</h2>
+        <p class="hint">Покажем только игристые</p>
+      </a>
+      <a class="tile all" href="/winery/">
+        <h2>📚 Все вина</h2>
+        <p class="hint">Показать весь каталог (без пресетов)</p>
+      </a>
+    </div>
+
+    <p class="foot">версия сайта: 2.0 • winelink сделан с душой Lavroovich-ем</p>
+  </main>
+
+  <script>
+    // Triple‑tap/клик по логотипу: показываем/скрываем панель статуса и подтягиваем реальные значения
+    (function(){
+      const logo = document.getElementById('app-logo');
+      const panel = document.getElementById('sys-status');
+      let taps = [];
+      let loaded = false;
+
+      function registerTap(){
+        const now = Date.now();
+        taps = taps.filter(t => now - t < 600);
+        taps.push(now);
+        if (taps.length >= 3) {
+          taps = [];
+          panel.classList.toggle('hidden');
+          if (!panel.classList.contains('hidden') && !loaded) {
+            loaded = true;
+            fetchStatus();
+          }
+        }
+      }
+
+      // Универсально: pointerup работает и для мыши, и для тачей
+      logo.addEventListener('pointerup', registerTap);
+
+      async function fetchStatus(){
+        try {
+          const res = await fetch('/status.json', { cache: 'no-store' });
+          const data = await res.json();
+          const ruColor = { red: 'красн.', white: 'бел.', pink: 'роз.' };
+          const envHuman = data.env === 'vercel' ? 'production (vercel)' : 'local';
+          const dbMode = data.db_mode === 'ro' ? 'read-only' : 'read-write';
+          const colors = data.details.colors || {};
+          const colorStr = Object.keys(colors).length
+            ? Object.entries(colors)
+                .map(([k,v]) => `${ruColor[k] || k}: ${v}`)
+                .join(', ')
+            : '—';
+          const sugars = (data.details.sugars_present || []).join(', ');
+          const geo = `страны: ${data.details.countries_total ?? '—'}, регионы: ${data.details.regions_total ?? '—'}`;
+          const vines = `${data.details.vines_total ?? '—'} (игристых: ${data.details.sparkling_yes ?? 0})`;
+          const pdfMissing = data.details.pdfs_missing || [];
+          const pdfExtra = data.details.pdfs_extra || [];
+          const pdfs = `в папке: ${data.details.pdfs_in_dir ?? '—'}, недостаёт: ${pdfMissing.length}, лишние: ${pdfExtra.length}`;
+
+          document.getElementById('st-env').textContent = `${envHuman}, DB ${dbMode}`;
+          document.getElementById('st-db').innerHTML = data.db_connected
+            ? '<span class="ok">connected</span>'
+            : '<span class="err">disconnected</span>';
+          document.getElementById('st-vines').textContent = vines;
+          document.getElementById('st-colors').textContent = colorStr;
+          document.getElementById('st-geo').textContent = geo;
+          document.getElementById('st-grapes').textContent = `${data.details.grapes_total ?? '—'} уникальных`;
+          document.getElementById('st-sugars').textContent = sugars || '—';
+          const pdfEl = document.getElementById('st-pdfs');
+          pdfEl.textContent = pdfs;
+          if (pdfMissing.length || pdfExtra.length) {
+            const tip = [];
+            if (pdfMissing.length) tip.push(`нет в FS: ${pdfMissing.slice(0,20).join(', ')}${pdfMissing.length>20?'…':''}`);
+            if (pdfExtra.length) tip.push(`лишние в FS: ${pdfExtra.slice(0,20).join(', ')}${pdfExtra.length>20?'…':''}`);
+            pdfEl.title = tip.join(' | ');
+          }
+          document.getElementById('st-ver').textContent = data.version || '—';
+        } catch (e) {
+          document.getElementById('st-db').innerHTML = '<span class="err">error</span>';
+        }
+      }
+    })();
+  </script>
+</body>
+</html>

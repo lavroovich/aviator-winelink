@@ -125,7 +125,7 @@ h1 { font-size:1.6rem; text-align:center; margin-bottom:15px; background: #6f0a0
 <div class="wine-list"></div>
 <div class="wine-list-sorted"></div>
 
-<p>версия сайта: 1.1a</p>
+<p>версия сайта: 2.0</p>
 <p>winelink сделан с душой <span class="bold">Lavroovich-ем</span></p>
 
 <script>
@@ -141,6 +141,7 @@ const sugarMap = { dry:"Сухое", semidry:"Полусухое", brut: "Брю
 
 // получаем данные из шаблона
 const allVines = {{ vines|tojson }};
+const presetFilters = {{ applyed_filters|tojson }};
 
 // фикс для undefined sparkling
 allVines.forEach(v => {
@@ -189,6 +190,19 @@ function populateSelect(select, values, map){
 
 function animateCards(cards){ 
     cards.forEach((c,i)=>setTimeout(()=>c.classList.add('show'), i*50)); 
+}
+
+function toArray(val){
+    if(val==null) return [];
+    if(Array.isArray(val)) return val;
+    return [val];
+}
+
+function selectValues(select, values){
+    const vals = new Set(toArray(values).map(String));
+    Array.from(select.options).forEach(opt=>{
+        opt.selected = vals.has(String(opt.value));
+    });
 }
 
 function renderVines(vines){
@@ -320,9 +334,37 @@ populateSelect(selects.region,getUniqueValues(allVines,'region'));
 populateSelect(selects.grape,getUniqueValues(allVines,'grape'));
 populateSelect(selects.sugar,getUniqueValues(allVines,'sugar'),sugarMap);
 
-// рендер
-renderVines(allVines);
-updateSorted();
+// применяем пресеты из applyed_filters (если переданы)
+function applyPresetFilters(){
+    try {
+        const pf = presetFilters || {};
+        if(pf.name) document.querySelector('#filter-name').value = pf.name;
+        if('sparkling' in pf) document.querySelector('#filter-sparkling').checked = !!pf.sparkling;
+
+        if(pf.country) selectValues(selects.country, pf.country);
+        if(pf.color) selectValues(selects.color, pf.color);
+        if(pf.sugar) selectValues(selects.sugar, pf.sugar);
+        // регион зависит от страны/игристого, выставим после первой фильтрации
+        // но если пришел регион — сохраним и попробуем применить после пересборки списка регионов
+        const pendingRegion = toArray(pf.region);
+
+        // первая фильтрация применит страну/цвет/сахар/игристое/имя
+        filterVines();
+        updateColorHighlight();
+
+        if(pendingRegion.length){
+            // после пересборки регионов выберем нужные и снова отфильтруем
+            selectValues(selects.region, pendingRegion);
+            filterVines();
+        }
+    } catch(e){
+        // если что-то не так с пресетом — просто отрисуем все вина
+        renderVines(allVines);
+        updateSorted();
+    }
+}
+
+applyPresetFilters();
 
 // события
 document.querySelectorAll('.filters input, .filters select').forEach(el=>{

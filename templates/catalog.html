@@ -125,7 +125,7 @@ h1 { font-size:1.6rem; text-align:center; margin-bottom:15px; background: #6f0a0
 <div class="wine-list"></div>
 <div class="wine-list-sorted"></div>
 
-<p>версия сайта: 2.0</p>
+<p>версия сайта: 2.1</p>
 <p>winelink сделан с душой <span class="bold">Lavroovich-ем</span></p>
 
 <script>
@@ -221,8 +221,8 @@ function renderVines(vines){
         card.dataset.pdf=v.pdf_file;
         card.innerHTML = `
             <h3>${v.name}</h3>
-            <div class="main-info">${countryMap[v.country]||v.country} • ${colorMap[v.color]||v.color} • ${sugar}</div>
-            <div class="extra-info">Регион: ${v.region||"—"} | Сорт винограда: ${grapes}</div>
+            <div class=\"main-info\">${countryMap[v.country]||v.country} • ${colorMap[v.color]||v.color} • ${sugar} • Цена: ${v.price || "—"}</div>
+            <div class=\"extra-info\">Регион: ${v.region||"—"} | Сорт винограда: ${grapes}</div>
         `;
         list.appendChild(card); 
         cards.push(card);
@@ -301,8 +301,8 @@ function renderSortedVines(vines,criterion){
                 if(v.sparkling==="yes") card.classList.add('sparkling'); // игристое
                 card.innerHTML = `
                     <h3>${v.name}</h3>
-                    <div class="main-info">${countryMap[v.country]||v.country} • ${colorMap[v.color]||v.color} • ${sugar}</div>
-                    <div class="extra-info">Регион: ${v.region||"—"} | Сорт винограда: ${grapes}</div>
+                    <div class=\"main-info\">${countryMap[v.country]||v.country} • ${colorMap[v.color]||v.color} • ${sugar} • Цена: ${v.price || "—"}</div>
+                    <div class=\"extra-info\">Регион: ${v.region||"—"} | Сорт винограда: ${grapes}</div>
                 `;
                 sortedList.appendChild(card);
                 card.addEventListener('click',()=>window.open('/vinery/'+v.pdf_file,'_blank'));

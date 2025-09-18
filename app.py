@@ -30,6 +30,7 @@ class Vine(database.Model):
     grape = database.Column(database.String(200), nullable=True)  # JSON
     sugar = database.Column(database.String(50), nullable=False)
     pdf_file = database.Column(database.String(200), nullable=False)
+    price = database.Column(database.String(100), nullable=True)
 
 # ----- Роуты -----
 @app.route("/")
@@ -62,7 +63,8 @@ def catalog():
             "grape": grapes,
             "sugar": v.sugar,
             "pdf_file": v.pdf_file,
-            "sparkling": v.sparkling
+            "sparkling": v.sparkling,
+            "price": v.price
         })
 
     return render_template("catalog.html", vines=vines_list, applyed_filters=applyed_filters)
@@ -136,7 +138,7 @@ def status_json():
         "env": env,
         "db_mode": db_mode,
         "db_connected": ok,
-        "version": "2.0",
+        "version": "2.1",
         "details": details,
     }
     return jsonify(payload)

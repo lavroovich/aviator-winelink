@@ -97,8 +97,8 @@ h1 { font-size:1.6rem; text-align:center; margin-bottom:15px; background: #6f0a0
 .wine-card .toggle-price:focus { outline:2px solid rgba(111,10,10,0.25); outline-offset:2px; }
 .wine-card .toggle-price.is-hidden { display:none; }
 .wine-card .price:focus-visible { outline:2px solid rgba(111,10,10,0.25); outline-offset:2px; }
-.wine-card .main-info { font-size:0.9rem; color:#333; font-weight:500; }
-.wine-card .extra-info { font-size:0.8rem; color:#777; }
+.wine-card .main-info { font-size:0.9rem; color:#333; font-weight:500; margin-bottom:2px; }
+.wine-card .extra-info { font-size:0.8rem; color:#777; margin-bottom:8px; }
 .bold { font-weight:bold; }
 </style>
 </head>
@@ -246,13 +246,13 @@ function renderVines(vines){
         const priceText = v.price ? `Цена: ${v.price} ₽` : 'Цена: —';
         card.innerHTML = `
             <h3>${v.name}</h3>
+            <div class=\"main-info\">${countryMap[v.country]||v.country} • ${colorMap[v.color]||v.color} • ${sugar}</div>
+            <div class=\"extra-info\">Регион: ${v.region||"—"} | Сорт винограда: ${grapes}</div>
             <button type=\"button\" class=\"toggle-price\" aria-expanded=\"false\" aria-controls=\"${priceId}\">
                 <span aria-hidden=\"true\">👁</span>
                 <span class=\"toggle-price-label\">Показать цену</span>
             </button>
             <div class=\"price is-hidden\" id=\"${priceId}\" role=\"button\" tabindex=\"0\" aria-hidden=\"true\" aria-label=\"Скрыть цену\" title=\"Нажмите, чтобы скрыть цену\">${priceText}</div>
-            <div class=\"main-info\">${countryMap[v.country]||v.country} • ${colorMap[v.color]||v.color} • ${sugar}</div>
-            <div class=\"extra-info\">Регион: ${v.region||"—"} | Сорт винограда: ${grapes}</div>
         `;
         list.appendChild(card); 
         cards.push(card);
@@ -379,13 +379,13 @@ function renderSortedVines(vines,criterion){
                 const priceText = v.price ? `Цена: ${v.price} ₽` : 'Цена: —';
                 card.innerHTML = `
                     <h3>${v.name}</h3>
+                    <div class=\"main-info\">${countryMap[v.country]||v.country} • ${colorMap[v.color]||v.color} • ${sugar}</div>
+                    <div class=\"extra-info\">Регион: ${v.region||"—"} | Сорт винограда: ${grapes}</div>
                     <button type=\"button\" class=\"toggle-price\" aria-expanded=\"false\" aria-controls=\"${priceId}\">
                         <span aria-hidden=\"true\">👁</span>
                         <span class=\"toggle-price-label\">Показать цену</span>
                     </button>
                     <div class=\"price is-hidden\" id=\"${priceId}\" role=\"button\" tabindex=\"0\" aria-hidden=\"true\" aria-label=\"Скрыть цену\" title=\"Нажмите, чтобы скрыть цену\">${priceText}</div>
-                    <div class=\"main-info\">${countryMap[v.country]||v.country} • ${colorMap[v.color]||v.color} • ${sugar}</div>
-                    <div class=\"extra-info\">Регион: ${v.region||"—"} | Сорт винограда: ${grapes}</div>
                 `;
                 sortedList.appendChild(card);
                 setupPriceToggle(card);

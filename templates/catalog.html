@@ -7,7 +7,20 @@
 <link href="https://fonts.googleapis.com/css?family=Alegreya+SC:500,700&display=swap" rel="stylesheet">
 <style>
 body { margin:0; padding:0; min-height:100vh; font-family:'Alegreya SC', sans-serif; background:#faf7f0; color:#333; display:flex; flex-direction:column; }
-header { width:100%; text-align:center; padding:10px 0; background:#fff; border-bottom:1px solid #ddd; position:sticky; top:0; z-index:10; }
+header { width:100%; display:flex; justify-content:center; padding:24px 18px 12px; background:transparent; border-bottom:none; position:sticky; top:0; z-index:20; }
+.logo-container {
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:12px;
+    padding:18px 26px;
+    margin:0 auto;
+    border-radius:20px;
+    border:1px solid rgba(111,10,10,0.12);
+    background:linear-gradient(140deg, rgba(255,244,235,0.95) 0%, rgba(255,255,255,0.98) 55%, #ffffff 100%);
+    box-shadow:0 12px 30px rgba(111,10,10,0.08);
+}
+.logo-container img { display:block; max-width:150px; height:auto; }
 main { flex:1; padding:15px; }
 h1 { font-size:1.6rem; text-align:center; margin-bottom:15px; background: #6f0a0a; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
 
@@ -370,7 +383,9 @@ h1 { font-size:1.6rem; text-align:center; margin-bottom:15px; background: #6f0a0
 </head>
 <body>
 <header>
-    <img src="static/logo.jpg" alt="VineLink" style="max-width:150px;">
+    <div class="logo-container">
+        <img src="{{ url_for('static', filename='logo.jpg') }}" alt="VineLink">
+    </div>
 </header>
 <main>
 <h1>Винная Карта</h1>

@@ -6,73 +6,119 @@
 <title>PDF — WineLink</title>
 <link href="https://fonts.googleapis.com/css?family=Alegreya+SC:500,700&display=swap" rel="stylesheet">
 <style>
-html, body {
+* { box-sizing:border-box; }
+body {
     margin:0;
     padding:0;
-    height:100dvh; /* учитывает адресную строку на мобилках */
+    min-height:100vh;
     font-family:'Alegreya SC', sans-serif;
     display:flex;
     flex-direction:column;
     background:#faf7f0;
+    color:#333;
 }
 
 header {
     width:100%;
-    text-align:center;
-    padding:15px 0;
-    background:#fff;
-    border-bottom:1px solid #ddd;
+    display:flex;
+    justify-content:center;
+    padding:24px 18px 12px;
+    background:transparent;
+    border-bottom:none;
     position:sticky;
     top:0;
     z-index:20;
+}
+
+.logo-container {
     display:flex;
-    flex-direction:column;
     align-items:center;
-    gap:10px;
+    justify-content:center;
+    gap:12px;
+    padding:18px 26px;
+    border-radius:20px;
+    border:1px solid rgba(111,10,10,0.12);
+    background:linear-gradient(140deg, rgba(255,244,235,0.95) 0%, rgba(255,255,255,0.98) 55%, #ffffff 100%);
+    box-shadow:0 12px 30px rgba(111,10,10,0.08);
 }
 
-header img { max-width:150px; }
-
-header a button {
-    padding:10px 24px;
-    font-size:1rem;
-    font-weight:bold;
-    cursor:pointer;
-    border:none;
-    border-radius:12px;
-    background:#6f0a0a;
-    color:#fff;
-    box-shadow:0 4px 10px rgba(0,0,0,0.15);
-    transition:transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-header a button:hover {
-    transform:scale(1.05);
-    box-shadow:0 6px 14px rgba(0,0,0,0.2);
+.logo-container img {
+    display:block;
+    max-width:150px;
+    height:auto;
 }
 
 main {
     flex:1;
+    width:100%;
+    max-width:1200px;
+    margin:0 auto;
+    padding:28px 18px 40px;
     display:flex;
-    overflow:hidden; /* iframe будет сам масштабировать PDF */
+    flex-direction:column;
+    gap:24px;
 }
 
-iframe {
+.viewer-actions {
+    display:flex;
+    justify-content:center;
+}
+
+.back-link {
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:12px 26px;
+    font-size:1rem;
+    font-weight:700;
+    text-decoration:none;
+    color:#ffffff;
+    background:linear-gradient(135deg, #7f1212 0%, #6f0a0a 55%, #590808 100%);
+    border-radius:16px;
+    box-shadow:0 12px 24px rgba(111,10,10,0.18);
+    transition:transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.back-link:hover {
+    transform:translateY(-2px);
+    box-shadow:0 18px 34px rgba(111,10,10,0.22);
+}
+
+.viewer-frame {
     flex:1;
+    min-height:60vh;
+    border-radius:20px;
+    border:1px solid rgba(111,10,10,0.12);
+    background:linear-gradient(140deg, rgba(255,244,235,0.95) 0%, rgba(255,255,255,0.98) 55%, #ffffff 100%);
+    box-shadow:0 18px 36px rgba(111,10,10,0.1);
+    overflow:hidden;
+}
+
+.viewer-frame iframe {
     width:100%;
     height:100%;
     border:none;
+    background:#fff;
+}
+@media (max-width:640px) {
+    .back-link { width:100%; justify-content:center; }
 }
 </style>
 </head>
 <body>
 <header>
-    <img src="/static/logo.jpg" alt="VineLink">
-    <a href="/"><button>Винная Карта</button></a>
+    <div class="logo-container">
+        <img src="{{ url_for('static', filename='logo.jpg') }}" alt="WineLink">
+    </div>
 </header>
 <main>
-    <!-- #zoom=page-fit делает так, чтобы PDF полностью помещался -->
-    <iframe src="{{ url_for('pdfs', filename=filename) }}#zoom=page-fit" allowfullscreen></iframe>
+    <div class="viewer-actions">
+        <a class="back-link" href="/">← Винная Карта</a>
+    </div>
+    <div class="viewer-frame">
+        <!-- #zoom=page-fit делает так, чтобы PDF полностью помещался -->
+        <iframe src="{{ url_for('pdfs', filename=filename) }}#zoom=page-fit" allowfullscreen></iframe>
+    </div>
 </main>
 </body>
 </html>

@@ -6,117 +6,191 @@
   <title>Авиатор - Винная Карта</title>
   <link href="https://fonts.googleapis.com/css?family=Alegreya+SC:500,700&display=swap" rel="stylesheet">
   <style>
-    :root {
-      --bg: #faf7f0;
-      --fg: #333;
-      --card: #fff;
-      --shadow: 0 4px 12px rgba(0,0,0,0.08);
-      --radius: 14px;
-    }
-    * { box-sizing: border-box; }
+    * { box-sizing:border-box; }
     body {
       margin:0; padding:0; min-height:100vh;
       font-family:'Alegreya SC', sans-serif;
-      background:var(--bg); color:var(--fg);
+      background:#faf7f0; color:#333;
       display:flex; flex-direction:column;
     }
     header {
-      width:100%; text-align:center; padding:10px 0;
-      background:#fff; border-bottom:1px solid #ddd;
-      position:sticky; top:0; z-index:10;
+      width:100%;
+      display:flex;
+      justify-content:center;
+      padding:24px 18px 12px;
+      background:transparent;
+      border-bottom:none;
+      position:sticky;
+      top:0;
+      z-index:20;
     }
-    main { flex:1; padding:18px; max-width:1100px; margin:0 auto; width:100%; }
+    .logo-container {
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:12px;
+      padding:18px 26px;
+      margin:0 auto;
+      border-radius:20px;
+      border:1px solid rgba(111,10,10,0.12);
+      background:linear-gradient(140deg, rgba(255,244,235,0.95) 0%, rgba(255,255,255,0.98) 55%, #ffffff 100%);
+      box-shadow:0 12px 30px rgba(111,10,10,0.08);
+    }
+    .logo-container img {
+      display:block;
+      max-width:150px;
+      height:auto;
+      cursor:pointer;
+    }
+    main {
+      flex:1;
+      width:100%;
+      max-width:1120px;
+      margin:0 auto;
+      padding:28px 18px 48px;
+      display:flex;
+      flex-direction:column;
+      gap:28px;
+    }
     h1 {
-      font-size:1.8rem; text-align:center; margin:12px 0 18px;
-      background:#6f0a0a; -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+      margin:0;
+      font-size:1.9rem;
+      text-align:center;
+      background:#6f0a0a;
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+      background-clip:text;
     }
-
-    .intro {
-      display:flex; align-items:center; justify-content:space-between;
-      gap:16px; margin:0 auto 18px; width:100%; flex-wrap:wrap;
+    .welcome-panels {
+      display:grid;
+      grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));
+      gap:20px;
     }
-    .intro .card {
-      flex:1 1 320px; background:var(--card); border:1px solid #e5e2da;
-      border-radius:var(--radius); padding:16px; box-shadow:var(--shadow);
+    .panel {
+      position:relative;
+      padding:22px 24px;
+      border-radius:18px;
+      border:1px solid rgba(111,10,10,0.12);
+      background:linear-gradient(140deg, rgba(255,244,235,0.95) 0%, rgba(255,255,255,0.98) 65%, #ffffff 100%);
+      box-shadow:0 12px 30px rgba(111,10,10,0.08);
+      overflow:hidden;
     }
-    .intro .card p { margin:0; font-size:1.05rem; line-height:1.3; opacity:0.9; }
-    .intro .status {
-      flex:0 0 260px; background:#0f172a; color:#e2e8f0; border-radius:var(--radius);
-      padding:14px 16px; box-shadow:0 6px 20px rgba(15,23,42,.15);
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    .panel::after {
+      content:'';
+      position:absolute;
+      inset:0;
+      background:radial-gradient(circle at 85% 15%, rgba(111,10,10,0.08), transparent 55%);
+      pointer-events:none;
     }
-    .intro .status .row { display:flex; justify-content:space-between; gap:12px; font-size:.9rem; }
-    .intro .status .ok { color:#10b981; }
-    .intro .status .dim { color:#94a3b8; }
-    .intro .status.hidden { display:none; }
-    .intro .status .label { color:#94a3b8; }
-    .intro .status .val { color:#e2e8f0; }
-    .intro .status .warn { color:#f59e0b; }
-    .intro .status .err  { color:#ef4444; }
-
+    .panel__body {
+      position:relative;
+      z-index:1;
+    }
+    .lead-text {
+      margin:0;
+      font-size:1.1rem;
+      line-height:1.45;
+      color:rgba(51,51,51,0.9);
+    }
+    .status-panel {
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      font-size:0.9rem;
+      background:linear-gradient(160deg, #1e293b 0%, #0f172a 55%, #0b1120 100%);
+      color:#e2e8f0;
+      font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+      border:1px solid rgba(255,255,255,0.08);
+      box-shadow:0 18px 36px rgba(15,23,42,0.28);
+    }
+    .status-panel::after {
+      background:radial-gradient(circle at 85% 20%, rgba(148,163,184,0.18), transparent 60%);
+    }
+    .status-panel.hidden { display:none; }
+    .status-row {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+    }
+    .status-row .label { color:#94a3b8; }
+    .status-row .val { color:#e2e8f0; }
+    .status-row .ok { color:#10b981; }
+    .status-row .warn { color:#fbbf24; }
+    .status-row .err { color:#ef4444; }
     .tiles {
-      display:grid; gap:14px; margin:18px 0 8px;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      display:grid;
+      gap:18px;
+      grid-template-columns:repeat(auto-fit, minmax(230px, 1fr));
     }
     .tile {
-      display:block; text-decoration:none; color:inherit;
-      background:var(--card); border:1px solid #ddd; border-radius:var(--radius);
-      padding:18px; box-shadow:var(--shadow);
-      transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease;
-      position:relative; overflow:hidden;
+      display:block;
+      position:relative;
+      text-decoration:none;
+      color:inherit;
+      padding:22px 24px;
+      border-radius:18px;
+      border:1px solid rgba(111,10,10,0.12);
+      background:linear-gradient(150deg, rgba(255,244,235,0.95) 0%, rgba(255,255,255,0.98) 58%, #ffffff 100%);
+      box-shadow:0 10px 24px rgba(111,10,10,0.08);
+      transition:transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+      overflow:hidden;
     }
-    .tile:hover { transform:translateY(-2px) scale(1.02); box-shadow:0 8px 20px rgba(0,0,0,0.12); }
-    .tile h2 { margin:0 0 6px; font-size:1.2rem; }
-    .tile .hint { margin:0; font-size:.95rem; opacity:.8; }
-
-    .tile.red {
-      background:linear-gradient(135deg,#fff0f0,#ffe5e5);
-      border-color:#ffb3b3;
+    .tile::after {
+      content:'';
+      position:absolute;
+      inset:0;
+      background:radial-gradient(circle at 85% 20%, rgba(111,10,10,0.08), transparent 60%);
+      transition:opacity 0.25s ease;
+      pointer-events:none;
     }
-    .tile.white {
-      background:linear-gradient(135deg,#fffff0,#fffbe6);
-      border-color:#ffe680;
+    .tile:hover {
+      transform:translateY(-4px);
+      box-shadow:0 16px 32px rgba(111,10,10,0.12);
+      border-color:rgba(111,10,10,0.35);
     }
-    .tile.pink {
-      background:linear-gradient(135deg,#ffe6f0,#ffd9e8);
-      border-color:#f5a5c2;
-    }
-    .tile.sparkling {
-      background:linear-gradient(135deg,#fff9e0,#fff2b6);
-      border-color:#ffd700;
-      box-shadow:0 4px 16px rgba(255,215,0,0.25);
-    }
-    .tile.all {
-      background:linear-gradient(135deg,#f4f4f4,#e9e9e9);
-      border-color:#d0d0d0; color:#555;
-    }
-
+    .tile:hover::after { opacity:0.6; }
+    .tile h2 { margin:0 0 8px; font-size:1.28rem; position:relative; z-index:1; }
+    .tile .hint { margin:0; font-size:0.96rem; opacity:0.8; position:relative; z-index:1; }
+    .tile.red::after { background:radial-gradient(circle at 85% 20%, rgba(111,10,10,0.2), transparent 60%); }
+    .tile.white::after { background:radial-gradient(circle at 85% 20%, rgba(227,192,74,0.22), transparent 60%); }
+    .tile.pink::after { background:radial-gradient(circle at 85% 20%, rgba(215,94,140,0.22), transparent 60%); }
+    .tile.sparkling::after { background:radial-gradient(circle at 85% 20%, rgba(217,180,28,0.28), transparent 60%); }
+    .tile.all::after { background:radial-gradient(circle at 85% 20%, rgba(51,51,51,0.16), transparent 60%); }
     .foot {
-      text-align:center; margin-top:16px; opacity:.8; font-size:.95rem;
+      text-align:center;
+      margin-top:8px;
+      font-size:0.92rem;
+      color:rgba(51,51,51,0.72);
     }
   </style>
 </head>
 <body>
   <header>
-    <img id="app-logo" src="static/logo.jpg" alt="logo" style="max-width:150px; cursor:pointer;" title="Трипл-тап: показать состояние">
+    <div class="logo-container" title="Трипл-тап: показать состояние">
+      <img id="app-logo" src="{{ url_for('static', filename='logo.jpg') }}" alt="logo">
+    </div>
   </header>
   <main>
     <h1>Винная Карта</h1>
-
-    <div class="intro">
-      <div class="card">
-        <p>Выберите категорию — мы подготовим фильтры и откроем каталог.</p>
+    <div class="welcome-panels">
+      <div class="panel">
+        <div class="panel__body">
+          <p class="lead-text">Выберите категорию — мы подготовим фильтры и откроем каталог.</p>
+        </div>
       </div>
-      <div id="sys-status" class="status hidden" aria-label="Состояние системы">
-        <div class="row"><span class="label">ENV</span><span class="val" id="st-env">—</span></div>
-        <div class="row"><span class="label">DB</span><span class="val" id="st-db">—</span></div>
-        <div class="row"><span class="label">Каталог</span><span class="val" id="st-vines">—</span></div>
-        <div class="row"><span class="label">Цвета</span><span class="val" id="st-colors">—</span></div>
-        <div class="row"><span class="label">География</span><span class="val" id="st-geo">—</span></div>
-        <div class="row"><span class="label">Сорта</span><span class="val" id="st-grapes">—</span></div>
-        <div class="row"><span class="label">Сладость</span><span class="val" id="st-sugars">—</span></div>
-        <div class="row"><span class="label">PDF</span><span class="val" id="st-pdfs">—</span></div>
-        <div class="row"><span class="label">Версия</span><span class="val" id="st-ver">—</span></div>
+      <div id="sys-status" class="panel status-panel hidden" aria-label="Состояние системы">
+        <div class="panel__body">
+          <div class="status-row"><span class="label">ENV</span><span class="val" id="st-env">—</span></div>
+          <div class="status-row"><span class="label">DB</span><span class="val" id="st-db">—</span></div>
+          <div class="status-row"><span class="label">Каталог</span><span class="val" id="st-vines">—</span></div>
+          <div class="status-row"><span class="label">Цвета</span><span class="val" id="st-colors">—</span></div>
+          <div class="status-row"><span class="label">География</span><span class="val" id="st-geo">—</span></div>
+          <div class="status-row"><span class="label">Сорта</span><span class="val" id="st-grapes">—</span></div>
+          <div class="status-row"><span class="label">Сладость</span><span class="val" id="st-sugars">—</span></div>
+          <div class="status-row"><span class="label">PDF</span><span class="val" id="st-pdfs">—</span></div>
+          <div class="status-row"><span class="label">Версия</span><span class="val" id="st-ver">—</span></div>
+        </div>
       </div>
     </div>
 

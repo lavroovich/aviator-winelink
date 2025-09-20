@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Диагностика ресурсов — WineLink</title>
+  <link href="https://fonts.googleapis.com/css?family=Alegreya+SC:500,700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #faf7f0;
+      --fg: #2f2f2f;
+      --card: #ffffff;
+      --soft-card: #f3eee2;
+      --radius: 14px;
+      --shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+      --border: 1px solid rgba(15, 23, 42, 0.1);
+      --accent: #6f0a0a;
+      --accent-soft: rgba(111, 10, 10, 0.08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: 'Alegreya SC', sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      width: 100%;
+      text-align: center;
+      padding: 12px 0;
+      background: #fff;
+      border-bottom: 1px solid #ddd;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    main {
+      flex: 1;
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 22px 20px 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    h1 {
+      font-size: 1.9rem;
+      margin: 0;
+      text-align: center;
+      background: linear-gradient(135deg, #6f0a0a, #b42b2b);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    h2 {
+      font-size: 1.35rem;
+      margin: 0 0 12px;
+      color: #432;
+    }
+    h3 {
+      margin: 0 0 8px;
+      font-size: 1.15rem;
+      color: #433;
+    }
+    .metric-grid {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    }
+    .metric-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      border: var(--border);
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      transition: transform .2s ease, box-shadow .2s ease;
+    }
+    .metric-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 14px 30px rgba(15, 23, 42, 0.12);
+    }
+    .metric-label { font-size: 0.95rem; opacity: 0.75; }
+    .metric-value { font-size: 1.6rem; font-weight: 700; color: var(--accent); }
+    .metric-caption { font-size: 0.85rem; opacity: 0.65; }
+
+    .card-section {
+      background: var(--card);
+      border-radius: var(--radius);
+      border: var(--border);
+      box-shadow: var(--shadow);
+      padding: 20px 22px;
+    }
+    .flex-split {
+      display: grid;
+      gap: 18px;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    }
+    .list {
+      margin: 0;
+      padding-left: 18px;
+      font-size: 0.95rem;
+    }
+    .stat-box {
+      background: rgba(255,255,255,0.65);
+      border-radius: 12px;
+      padding: 14px 16px;
+      border: 1px solid rgba(15,23,42,0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .stat-box h3 { font-size: 1rem; color: #4b3b34; }
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.92rem;
+      padding: 6px 0;
+      border-bottom: 1px dashed rgba(15,23,42,0.08);
+    }
+    .stat-row:last-child { border-bottom: none; }
+
+    .sparkling-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 0.9rem;
+    }
+
+    .issue-grid {
+      display: grid;
+      gap: 16px;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    }
+    .issue-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      border: var(--border);
+      box-shadow: var(--shadow);
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .issue-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .badge {
+      background: var(--accent);
+      color: #fff;
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 0.85rem;
+      line-height: 1;
+      font-weight: 600;
+    }
+    .badge.ok { background: #10b981; }
+    .badge.warn { background: #f59e0b; }
+    .badge.err  { background: #ef4444; }
+
+    details {
+      background: #f9f5ea;
+      border-radius: 10px;
+      padding: 10px 12px;
+      border: 1px solid rgba(15,23,42,0.08);
+      font-size: 0.92rem;
+    }
+    details > summary {
+      cursor: pointer;
+      font-weight: 600;
+      margin-bottom: 6px;
+      list-style: none;
+    }
+    details > summary::-webkit-details-marker { display: none; }
+    details ul {
+      margin: 6px 0 0;
+      padding-left: 18px;
+    }
+    .file-tag {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 6px;
+      background: rgba(111,10,10,0.12);
+      color: #5a0606;
+      font-size: 0.85rem;
+      margin-left: 6px;
+    }
+    .empty-note {
+      font-size: 0.9rem;
+      color: #3c763d;
+      background: rgba(16,185,129,0.12);
+      border-radius: 8px;
+      padding: 10px 12px;
+      border: 1px solid rgba(16,185,129,0.2);
+    }
+    .alert {
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239,68,68,0.35);
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-size: 0.95rem;
+      color: #b91c1c;
+    }
+    footer {
+      text-align: center;
+      font-size: 0.85rem;
+      opacity: 0.7;
+    }
+    @media (max-width: 640px) {
+      main { padding: 18px 14px 24px; }
+    }
+  </style>
+</head>
+<body>
+<header>
+  <img src="static/logo.jpg" alt="WineLink" style="max-width:140px;">
+</header>
+<main>
+  <h1>Диагностика ресурсов каталога</h1>
+  <p>(проверка ассоциаций базы данных и ресурсов)</p>
+
+  {% if db_error %}
+    <div class="alert">Не удалось получить данные из базы: {{ db_error }}</div>
+  {% endif %}
+
+  <section class="card-section">
+    <h2>Сводка</h2>
+    <div class="metric-grid">
+      {% for metric in primary_metrics %}
+        <div class="metric-card">
+          <span class="metric-label">{{ metric.label }}</span>
+          <span class="metric-value">{{ metric.value }}</span>
+          <span class="metric-caption">{{ metric.caption }}</span>
+        </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="card-section">
+    <h2>Контроль качества</h2>
+    <div class="metric-grid">
+      {% for metric in quality_metrics %}
+        <div class="metric-card">
+          <span class="metric-label">{{ metric.label }}</span>
+          <span class="metric-value">{{ metric.value }}</span>
+          <span class="metric-caption">{{ metric.caption }}</span>
+        </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="card-section">
+    <h2>Каталоги и файловая структура</h2>
+    <div class="flex-split">
+      {% set pdf_dir = directories['pdf'] %}
+      <div class="stat-box">
+        <h3>PDF файлы</h3>
+        <div class="stat-row"><span>Папка</span><span>{{ pdf_dir.path }}</span></div>
+        <div class="stat-row"><span>Найдено</span><span>{{ pdf_dir.count }}</span></div>
+        <div class="stat-row"><span>Статус</span><span>{{ 'OK' if pdf_dir.exists else 'нет каталога' }}</span></div>
+        {% if pdf_dir.other %}
+          <details>
+            <summary>Доп. файлы ({{ pdf_dir.other|length }})</summary>
+            <ul>
+              {% for name in pdf_dir.other %}
+                <li>{{ name }}</li>
+              {% endfor %}
+            </ul>
+          </details>
+        {% endif %}
+      </div>
+      {% set bottles_dir = directories['bottles'] %}
+      <div class="stat-box">
+        <h3>Изображения бутылок</h3>
+        <div class="stat-row"><span>Папка</span><span>{{ bottles_dir.path }}</span></div>
+        <div class="stat-row"><span>Найдено</span><span>{{ bottles_dir.count }}</span></div>
+        <div class="stat-row"><span>Статус</span><span>{{ 'OK' if bottles_dir.exists else 'нет каталога' }}</span></div>
+        {% if bottles_dir.other %}
+          <details>
+            <summary>Доп. файлы ({{ bottles_dir.other|length }})</summary>
+            <ul>
+              {% for name in bottles_dir.other %}
+                <li>{{ name }}</li>
+              {% endfor %}
+            </ul>
+          </details>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+
+  <section class="card-section">
+    <h2>Статистика каталога</h2>
+    <div class="flex-split">
+      <div class="stat-box">
+        <h3>Цвета</h3>
+        {% for name, count in color_stats %}
+          <div class="stat-row"><span>{{ name }}</span><span>{{ count }}</span></div>
+        {% endfor %}
+      </div>
+      <div class="stat-box">
+        <h3>Уровень сахара</h3>
+        {% for name, count in sugar_stats %}
+          <div class="stat-row"><span>{{ name }}</span><span>{{ count }}</span></div>
+        {% endfor %}
+      </div>
+      <div class="stat-box">
+        <h3>Игристость</h3>
+        <div class="sparkling-chip">Игристые: {{ sparkling_stats.yes }}</div>
+        <div class="sparkling-chip">Тихие: {{ sparkling_stats.no }}</div>
+        {% if sparkling_stats.other %}
+          <div class="sparkling-chip">Иные: {{ sparkling_stats.other }}</div>
+        {% endif %}
+      </div>
+    </div>
+    <div class="flex-split">
+      <div class="stat-box">
+        <h3>Топ стран (до 12)</h3>
+        {% for name, count in country_stats[:12] %}
+          <div class="stat-row"><span>{{ name }}</span><span>{{ count }}</span></div>
+        {% endfor %}
+      </div>
+      <div class="stat-box">
+        <h3>Популярные сорта (до 15)</h3>
+        {% for name, count in grape_stats[:15] %}
+          <div class="stat-row"><span>{{ name }}</span><span>{{ count }}</span></div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <section class="card-section">
+    <h2>Проблемы и проверки</h2>
+    <div class="issue-grid">
+      <div class="issue-card">
+        <div class="issue-head">
+          <h3>Поля базы данных</h3>
+          <span class="badge {{ 'ok' if (missing_pdf_field|length == 0 and vines_missing_grape|length == 0 and vines_missing_price|length == 0) else 'warn' }}">{{ missing_pdf_field|length + vines_missing_grape|length + vines_missing_price|length }}</span>
+        </div>
+        <div>
+          <strong>Вина без PDF:</strong> {{ missing_pdf_field|length }}
+          {% if missing_pdf_field %}
+            <details>
+              <summary>Список</summary>
+              <ul>
+                {% for vine in missing_pdf_field %}
+                  <li>#{{ vine.id }} — {{ vine.name }}</li>
+                {% endfor %}
+              </ul>
+            </details>
+          {% else %}
+            <div class="empty-note">Все записи содержат PDF.</div>
+          {% endif %}
+        </div>
+        <div>
+          <strong>Без сортов:</strong> {{ vines_missing_grape|length }}
+          {% if vines_missing_grape %}
+            <details>
+              <summary>Список</summary>
+              <ul>
+                {% for vine in vines_missing_grape %}
+                  <li>#{{ vine.id }} — {{ vine.name }}</li>
+                {% endfor %}
+              </ul>
+            </details>
+          {% else %}
+            <div class="empty-note">У всех вин указаны сорта.</div>
+          {% endif %}
+        </div>
+        <div>
+          <strong>Без цены:</strong> {{ vines_missing_price|length }}
+          {% if vines_missing_price %}
+            <details>
+              <summary>Список</summary>
+              <ul>
+                {% for vine in vines_missing_price %}
+                  <li>#{{ vine.id }} — {{ vine.name }}</li>
+                {% endfor %}
+              </ul>
+            </details>
+          {% else %}
+            <div class="empty-note">Все цены заполнены.</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="issue-card">
+        <div class="issue-head">
+          <h3>Соответствие файлов</h3>
+          <span class="badge {{ 'ok' if (missing_pdf_on_disk|length == 0 and missing_bottle_images|length == 0) else 'warn' }}">{{ missing_pdf_on_disk|length + missing_bottle_images|length }}</span>
+        </div>
+        <div>
+          <strong>PDF не найден в каталоге:</strong> {{ missing_pdf_on_disk|length }}
+          {% if missing_pdf_on_disk %}
+            <details>
+              <summary>Список</summary>
+              <ul>
+                {% for vine, pdf_name in missing_pdf_on_disk %}
+                  <li>#{{ vine.id }} — {{ vine.name }} <span class="file-tag">{{ pdf_name }}</span></li>
+                {% endfor %}
+              </ul>
+            </details>
+          {% else %}
+            <div class="empty-note">Все PDF присутствуют.</div>
+          {% endif %}
+        </div>
+        <div>
+          <strong>Нет изображения бутылки:</strong> {{ missing_bottle_images|length }}
+          {% if missing_bottle_images %}
+            <details>
+              <summary>Список</summary>
+              <ul>
+                {% for vine, base_name in missing_bottle_images %}
+                  <li>#{{ vine.id }} — {{ vine.name }} <span class="file-tag">{{ base_name }}.*</span></li>
+                {% endfor %}
+              </ul>
+            </details>
+          {% else %}
+            <div class="empty-note">Все изображения найдены.</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="issue-card">
+        <div class="issue-head">
+          <h3>Лишние файлы</h3>
+          <span class="badge {{ 'ok' if (unused_pdf_files|length == 0 and unused_bottle_files|length == 0 and bottles_dir.other|length == 0 and pdf_dir.other|length == 0) else 'warn' }}">{{ unused_pdf_files|length + unused_bottle_files|length + bottles_dir.other|length + pdf_dir.other|length }}</span>
+        </div>
+        <div>
+          <strong>Не используется (PDF):</strong> {{ unused_pdf_files|length }}
+          {% if unused_pdf_files %}
+            <details>
+              <summary>Файлы</summary>
+              <ul>
+                {% for name in unused_pdf_files %}
+                  <li>{{ name }}</li>
+                {% endfor %}
+              </ul>
+            </details>
+          {% else %}
+            <div class="empty-note">Нет лишних PDF.</div>
+          {% endif %}
+        </div>
+        <div>
+          <strong>Не используется (изображения):</strong> {{ unused_bottle_files|length }}
+          {% if unused_bottle_files %}
+            <details>
+              <summary>Файлы</summary>
+              <ul>
+                {% for name in unused_bottle_files %}
+                  <li>{{ name }}</li>
+                {% endfor %}
+              </ul>
+            </details>
+          {% else %}
+            <div class="empty-note">Нет лишних изображений.</div>
+          {% endif %}
+        </div>
+        {% if pdf_dir.other %}
+          <div>
+            <strong>Другие объекты в PDF папке:</strong> {{ pdf_dir.other|length }}
+            <details>
+              <summary>Файлы</summary>
+              <ul>
+                {% for name in pdf_dir.other %}
+                  <li>{{ name }}</li>
+                {% endfor %}
+              </ul>
+            </details>
+          </div>
+        {% endif %}
+        {% if bottles_dir.other %}
+          <div>
+            <strong>Другие объекты в папке изображений:</strong> {{ bottles_dir.other|length }}
+            <details>
+              <summary>Файлы</summary>
+              <ul>
+                {% for name in bottles_dir.other %}
+                  <li>{{ name }}</li>
+                {% endfor %}
+              </ul>
+            </details>
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="issue-card">
+        <div class="issue-head">
+          <h3>Дубликаты привязок</h3>
+          <span class="badge {{ 'ok' if (duplicate_pdfs|length == 0 and duplicate_bottle_entries|length == 0) else 'warn' }}">{{ duplicate_pdfs|length + duplicate_bottle_entries|length }}</span>
+        </div>
+        <div>
+          <strong>PDF используется несколько раз:</strong> {{ duplicate_pdfs|length }}
+          {% if duplicate_pdfs %}
+            <details>
+              <summary>Список</summary>
+              <ul>
+                {% for item in duplicate_pdfs %}
+                  <li>
+                    <span class="file-tag">{{ item.pdf }}</span>
+                    <ul>
+                      {% for vine in item.vines %}
+                        <li>#{{ vine.id }} — {{ vine.name }}</li>
+                      {% endfor %}
+                    </ul>
+                  </li>
+                {% endfor %}
+              </ul>
+            </details>
+          {% else %}
+            <div class="empty-note">Дубликатов PDF не обнаружено.</div>
+          {% endif %}
+        </div>
+        <div>
+          <strong>Несколько изображений на одно вино:</strong> {{ duplicate_bottle_entries|length }}
+          {% if duplicate_bottle_entries %}
+            <details>
+              <summary>Список</summary>
+              <ul>
+                {% for item in duplicate_bottle_entries %}
+                  <li>
+                    база «{{ item.base }}»
+                    <ul>
+                      {% for name in item.files %}
+                        <li>{{ name }}</li>
+                      {% endfor %}
+                    </ul>
+                  </li>
+                {% endfor %}
+              </ul>
+            </details>
+          {% else %}
+            <div class="empty-note">Конфликтов изображений нет.</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>ver. 2.1 • WineLink диагностика • сделано с заботой</footer>
+</main>
+</body>
+</html>

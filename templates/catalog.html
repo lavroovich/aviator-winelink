@@ -11,10 +11,9 @@ header { width:100%; text-align:center; padding:10px 0; background:#fff; border-
 main { flex:1; padding:15px; }
 h1 { font-size:1.6rem; text-align:center; margin-bottom:15px; background: #6f0a0a; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
 
-.filters { display:flex; gap:10px; padding:10px; overflow-x:auto; background:#fff; border-radius:12px; box-shadow:0 2px 6px rgba(0,0,0,0.08); margin-bottom:15px; scrollbar-width:none; }
-.filters::-webkit-scrollbar { display:none; }
-.filter-box { flex:0 0 auto; min-width:140px; display:flex; flex-direction:column; background:#fafafa; padding:8px; border-radius:8px; border:1px solid #ddd; transition:background 0.4s ease, border-color 0.4s ease; text-align:center; }
-.filter-box label { font-size:0.75rem; font-weight:bold; margin-bottom:4px; display:flex; flex-direction:column; align-items:center; }
+.filters { display:flex; flex-direction:column; gap:12px; padding:12px; background:#fff; border-radius:12px; box-shadow:0 2px 6px rgba(0,0,0,0.08); margin-bottom:15px; }
+.filter-box { width:100%; display:flex; flex-direction:column; background:#fafafa; padding:10px; border-radius:8px; border:1px solid #ddd; transition:background 0.4s ease, border-color 0.4s ease; text-align:left; }
+.filter-box label { font-size:0.75rem; font-weight:bold; margin-bottom:4px; display:flex; flex-direction:column; align-items:flex-start; }
 .filter-box select, .filter-box input[type="text"] { padding:6px; font-size:0.9rem; border-radius:6px; border:1px solid #ccc; background:#fff; font-family:inherit; appearance:none; width:100%; box-sizing:border-box; }
 
 .filter-box.red-highlight { background:#ffd6d6; border-color:#ff8080; }
@@ -60,6 +59,38 @@ h1 { font-size:1.6rem; text-align:center; margin-bottom:15px; background: #6f0a0
     gap:6px;
     border:2px solid transparent;
 }
+.wine-card__media {
+    position:relative;
+    width:100%;
+    height:230px;
+    border-radius:10px;
+    background:linear-gradient(145deg, #f4ede2 0%, #ffffff 60%);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+}
+.wine-card__media img {
+    max-width:100%;
+    max-height:100%;
+    width:auto;
+    height:auto;
+    object-fit:contain;
+    transform:translateZ(0);
+    filter:drop-shadow(0 4px 6px rgba(0,0,0,0.15));
+}
+.wine-card__media--placeholder {
+    font-size:0.85rem;
+    font-weight:600;
+    color:#8c8c8c;
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+}
+.wine-card__body {
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+}
 .wine-card.show { opacity:1; transform:translateY(0) scale(1); }
 .wine-card:hover { transform:scale(1.04); box-shadow:0 6px 18px rgba(0,0,0,0.12); }
 
@@ -71,6 +102,9 @@ h1 { font-size:1.6rem; text-align:center; margin-bottom:15px; background: #6f0a0
     font-size:0.85rem;
     border-radius:10px;
     box-shadow:0 2px 6px rgba(0,0,0,0.06);
+}
+.wine-card.sub .wine-card__media {
+    height:190px;
 }
 .wine-card.sub.show { transform:translateY(0) scale(0.97); }
 
@@ -184,6 +218,56 @@ const selects = {
 let filteredVines = allVines.slice();
 let priceIdCounter = 0;
 
+function escapeHtml(value){
+    if(value === null || value === undefined) return '';
+    return String(value).replace(/[&<>"']/g, char => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+    })[char]);
+}
+
+function createImageMarkup(v, isSub){
+    if(v.image_url){
+        const safeName = escapeHtml(v.name || '');
+        const height = isSub ? 260 : 340;
+        return `
+            <div class=\"wine-card__media\">
+                <img src=\"${escapeHtml(v.image_url)}\" alt=\"Бутылка ${safeName}\" loading=\"lazy\" decoding=\"async\" fetchpriority=\"low\" width=\"240\" height=\"${height}\">
+            </div>
+        `;
+    }
+    return '<div class="wine-card__media wine-card__media--placeholder">Фотография Не Найдена</div>';
+}
+
+function createWineCardMarkup(v, priceId, isSub=false){
+    const safeName = escapeHtml(v.name || '—');
+    const sugar = escapeHtml(sugarMap[v.sugar] || v.sugar || '—');
+    const color = escapeHtml(colorMap[v.color] || v.color || '—');
+    const country = escapeHtml(countryMap[v.country] || v.country || '—');
+    const grapesList = v.grape && v.grape.length ? v.grape.join(', ') : '—';
+    const grapes = escapeHtml(grapesList);
+    const region = escapeHtml(v.region || '—');
+    const priceText = escapeHtml(v.price ? `Цена: ${v.price} ₽` : 'Цена: —');
+    const imageMarkup = createImageMarkup(v, isSub);
+
+    return `
+        ${imageMarkup}
+        <div class=\"wine-card__body\">
+            <h3>${safeName}</h3>
+            <div class=\"main-info\">${country} • ${color} • ${sugar}</div>
+            <div class=\"extra-info\">Регион: ${region} | Сорт винограда: ${grapes}</div>
+            <button type=\"button\" class=\"toggle-price\" aria-expanded=\"false\" aria-controls=\"${priceId}\">
+                <span aria-hidden=\"true\">👁</span>
+                <span class=\"toggle-price-label\">Показать цену</span>
+            </button>
+            <div class=\"price is-hidden\" id=\"${priceId}\" role=\"button\" tabindex=\"0\" aria-hidden=\"true\" aria-label=\"Скрыть цену\" title=\"Нажмите, чтобы скрыть цену\">${priceText}</div>
+        </div>
+    `;
+}
+
 // функции утилиты
 function getUniqueValues(vines, field){ 
     if(field==="grape") return [...new Set(vines.flatMap(v=>v.grape||[]))]; 
@@ -236,24 +320,12 @@ function renderVines(vines){
     }
     const cards=[];
     vines.forEach(v=>{
-        const grapes = v.grape && v.grape.length ? v.grape.join(", ") : "—";
-        const sugar = sugarMap[v.sugar] || v.sugar || "—";
         const card = document.createElement('div'); 
         card.className='wine-card';
         if(v.sparkling==="yes") card.classList.add('sparkling'); // выделяем игристое
         card.dataset.pdf=v.pdf_file;
         const priceId = `price-${++priceIdCounter}`;
-        const priceText = v.price ? `Цена: ${v.price} ₽` : 'Цена: —';
-        card.innerHTML = `
-            <h3>${v.name}</h3>
-            <div class=\"main-info\">${countryMap[v.country]||v.country} • ${colorMap[v.color]||v.color} • ${sugar}</div>
-            <div class=\"extra-info\">Регион: ${v.region||"—"} | Сорт винограда: ${grapes}</div>
-            <button type=\"button\" class=\"toggle-price\" aria-expanded=\"false\" aria-controls=\"${priceId}\">
-                <span aria-hidden=\"true\">👁</span>
-                <span class=\"toggle-price-label\">Показать цену</span>
-            </button>
-            <div class=\"price is-hidden\" id=\"${priceId}\" role=\"button\" tabindex=\"0\" aria-hidden=\"true\" aria-label=\"Скрыть цену\" title=\"Нажмите, чтобы скрыть цену\">${priceText}</div>
-        `;
+        card.innerHTML = createWineCardMarkup(v, priceId);
         list.appendChild(card); 
         cards.push(card);
         setupPriceToggle(card);
@@ -370,23 +442,11 @@ function renderSortedVines(vines,criterion){
             sortedList.appendChild(secondaryTitle);
 
             groups[pKey][sKey].forEach(v=>{
-                const grapes=v.grape&&v.grape.length?v.grape.join(", "):"—";
-                const sugar = sugarMap[v.sugar] || v.sugar || "—";
                 const card=document.createElement('div'); 
                 card.className='wine-card sub';
                 if(v.sparkling==="yes") card.classList.add('sparkling'); // игристое
                 const priceId = `price-${++priceIdCounter}`;
-                const priceText = v.price ? `Цена: ${v.price} ₽` : 'Цена: —';
-                card.innerHTML = `
-                    <h3>${v.name}</h3>
-                    <div class=\"main-info\">${countryMap[v.country]||v.country} • ${colorMap[v.color]||v.color} • ${sugar}</div>
-                    <div class=\"extra-info\">Регион: ${v.region||"—"} | Сорт винограда: ${grapes}</div>
-                    <button type=\"button\" class=\"toggle-price\" aria-expanded=\"false\" aria-controls=\"${priceId}\">
-                        <span aria-hidden=\"true\">👁</span>
-                        <span class=\"toggle-price-label\">Показать цену</span>
-                    </button>
-                    <div class=\"price is-hidden\" id=\"${priceId}\" role=\"button\" tabindex=\"0\" aria-hidden=\"true\" aria-label=\"Скрыть цену\" title=\"Нажмите, чтобы скрыть цену\">${priceText}</div>
-                `;
+                card.innerHTML = createWineCardMarkup(v, priceId, true);
                 sortedList.appendChild(card);
                 setupPriceToggle(card);
                 card.addEventListener('click',()=>window.open('/vinery/'+v.pdf_file,'_blank'));

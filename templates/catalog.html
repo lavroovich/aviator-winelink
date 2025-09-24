@@ -24,6 +24,92 @@ header { width:100%; display:flex; justify-content:center; padding:24px 18px 12p
 main { flex:1; padding:15px; }
 h1 { font-size:1.6rem; text-align:center; margin-bottom:15px; background: #6f0a0a; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
 
+.filters-toggle-row {
+    display:flex;
+    justify-content:center;
+    margin:0 0 16px;
+}
+.filters-toggle {
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:10px 20px;
+    border-radius:999px;
+    border:1px solid rgba(111,10,10,0.25);
+    background:#ffffff;
+    color:#6f0a0a;
+    font-size:0.95rem;
+    font-weight:600;
+    cursor:pointer;
+    letter-spacing:0.02em;
+    box-shadow:0 8px 20px rgba(111,10,10,0.12);
+    transition:transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, color 0.2s ease;
+}
+.filters-toggle:hover {
+    transform:translateY(-1px);
+    box-shadow:0 12px 30px rgba(111,10,10,0.16);
+}
+.filters-toggle:active {
+    transform:translateY(0);
+}
+.filters-toggle.is-active {
+    background:#6f0a0a;
+    color:#ffffff;
+}
+.filters-popover {
+    position:fixed;
+    inset:0;
+    display:none;
+    align-items:flex-start;
+    justify-content:center;
+    padding:80px 16px 24px;
+    z-index:40;
+}
+.filters-popover.is-open {
+    display:flex;
+}
+.filters-popover__backdrop {
+    position:absolute;
+    inset:0;
+    background:rgba(15,13,10,0.35);
+    backdrop-filter:blur(2px);
+}
+.filters-popover__panel {
+    position:relative;
+    width:min(95vw, 960px);
+    z-index:1;
+}
+body.filters-open {
+    overflow:hidden;
+}
+.filters__intro {
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    flex:1 1 auto;
+    min-width:min(240px, 100%);
+}
+.filters__close {
+    align-self:flex-start;
+    border:none;
+    background:rgba(111,10,10,0.12);
+    color:#6f0a0a;
+    padding:8px 16px;
+    border-radius:999px;
+    font-size:0.78rem;
+    font-weight:600;
+    cursor:pointer;
+    transition:background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+.filters__close:hover {
+    background:#6f0a0a;
+    color:#ffffff;
+    transform:translateY(-1px);
+}
+.filters__close:active {
+    transform:translateY(0);
+}
+
 .filters {
     position:relative;
     display:flex;
@@ -390,45 +476,63 @@ h1 { font-size:1.6rem; text-align:center; margin-bottom:15px; background: #6f0a0
 <main>
 <h1>Винная Карта</h1>
 
-<div class="filters">
-    <div class="filters__header">
-        <h2 class="filters__title">Подбор по параметрам</h2>
-        <p class="filters__hint">Выберите параметры, чтобы быстрее найти нужное вино внутри нашей коллекции.</p>
-    </div>
-    <div class="filters__grid">
-        <div class="filter-box filter-box--wide">
-            <label>Поиск</label>
-            <input id="filter-name" type="text" placeholder="Имя вина">
-        </div>
-        <div class="filter-box">
-            <label>Страна</label>
-            <select id="filter-country" multiple></select>
-        </div>
-        <div class="filter-box" id="filter-color-box">
-            <label>Цвет</label>
-            <select id="filter-color" multiple></select>
-        </div>
-        <div class="filter-box">
-            <label>Сахар</label>
-            <select id="filter-sugar" multiple></select> 
-        </div>
-        <div class="filter-box">
-            <label>Регион</label>
-            <select id="filter-region" multiple></select>
-        </div>
-        <div class="filter-box">
-            <label>Сорт винограда</label>
-            <select id="filter-grape" multiple></select>
-        </div>
-        <!-- Новый фильтр -->
-        <div class="filter-box filter-box--checkbox">
-            <label>
-                <input type="checkbox" id="filter-sparkling">
-                Игристое
-            </label>
+<div class="filters-toggle-row">
+    <button type="button" class="filters-toggle" id="filters-toggle" aria-haspopup="dialog" aria-expanded="false">
+        Показать фильтры
+    </button>
+</div>
+
+<div class="filters-popover" id="filters-popover" aria-hidden="true">
+    <div class="filters-popover__backdrop" id="filters-backdrop"></div>
+    <div class="filters-popover__panel" role="dialog" aria-modal="true" aria-labelledby="filters-title">
+        <div class="filters">
+            <div class="filters__header">
+                <div class="filters__intro">
+                    <h2 class="filters__title" id="filters-title">Подбор по параметрам</h2>
+                    <p class="filters__hint">Выберите параметры, чтобы быстрее найти нужное вино внутри нашей коллекции.</p>
+                </div>
+                <button type="button" class="filters__close" id="filters-close" aria-label="Закрыть фильтры">
+                    Закрыть
+                </button>
+            </div>
+            <div class="filters__grid">
+                <div class="filter-box filter-box--wide">
+                    <label>Поиск</label>
+                    <input id="filter-name" type="text" placeholder="Имя вина">
+                </div>
+                <div class="filter-box">
+                    <label>Страна</label>
+                    <select id="filter-country" multiple></select>
+                </div>
+                <div class="filter-box" id="filter-color-box">
+                    <label>Цвет</label>
+                    <select id="filter-color" multiple></select>
+                </div>
+                <div class="filter-box">
+                    <label>Сахар</label>
+                    <select id="filter-sugar" multiple></select> 
+                </div>
+                <div class="filter-box">
+                    <label>Регион</label>
+                    <select id="filter-region" multiple></select>
+                </div>
+                <div class="filter-box">
+                    <label>Сорт винограда</label>
+                    <select id="filter-grape" multiple></select>
+                </div>
+                <!-- Новый фильтр -->
+                <div class="filter-box filter-box--checkbox">
+                    <label>
+                        <input type="checkbox" id="filter-sparkling">
+                        Игристое
+                    </label>
+                </div>
+            </div>
         </div>
     </div>
 </div>
+
+
 
 <p>Нажимайте на карточки, чтобы узнать больше &darr;</p>
 <div class="wine-list"></div>
@@ -459,6 +563,67 @@ allVines.forEach(v => {
 
 const list = document.querySelector('.wine-list');
 const sortedList = document.querySelector('.wine-list-sorted');
+
+const filterPopover = document.getElementById('filters-popover');
+const filterToggleButton = document.getElementById('filters-toggle');
+const filterCloseButton = document.getElementById('filters-close');
+const filterBackdrop = document.getElementById('filters-backdrop');
+
+function setFilterPopupState(isOpen){
+    if(!filterToggleButton) return;
+    filterToggleButton.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    filterToggleButton.classList.toggle('is-active', isOpen);
+    filterToggleButton.textContent = isOpen ? 'Скрыть фильтры' : 'Показать фильтры';
+}
+
+function openFilters(){
+    if(!filterPopover) return;
+    filterPopover.classList.add('is-open');
+    filterPopover.setAttribute('aria-hidden','false');
+    document.body.classList.add('filters-open');
+    setFilterPopupState(true);
+    const firstInput = filterPopover.querySelector('#filter-name');
+    if(firstInput){
+        setTimeout(()=>firstInput.focus(), 60);
+    }
+}
+
+function closeFilters(restoreFocus=true){
+    if(!filterPopover) return;
+    filterPopover.classList.remove('is-open');
+    filterPopover.setAttribute('aria-hidden','true');
+    document.body.classList.remove('filters-open');
+    setFilterPopupState(false);
+    if(restoreFocus && filterToggleButton){
+        setTimeout(()=>filterToggleButton.focus(), 0);
+    }
+}
+
+if(filterToggleButton && filterPopover){
+    filterToggleButton.addEventListener('click', ()=>{
+        if(filterPopover.classList.contains('is-open')){
+            closeFilters(false);
+        } else {
+            openFilters();
+        }
+    });
+
+    if(filterCloseButton){
+        filterCloseButton.addEventListener('click', ()=>closeFilters());
+    }
+
+    if(filterBackdrop){
+        filterBackdrop.addEventListener('click', ()=>closeFilters());
+    }
+
+    document.addEventListener('keydown', event=>{
+        if(event.key === 'Escape' && filterPopover.classList.contains('is-open')){
+            closeFilters();
+        }
+    });
+
+    closeFilters(false);
+}
 
 const selects = { 
     country: document.querySelector('#filter-country'), 

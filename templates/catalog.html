@@ -64,6 +64,8 @@ h1 { font-size:1.6rem; text-align:center; margin-bottom:15px; background: #6f0a0
     justify-content:center;
     padding:80px 16px 24px;
     z-index:40;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
 }
 .filters-popover.is-open {
     display:flex;
@@ -78,6 +80,8 @@ h1 { font-size:1.6rem; text-align:center; margin-bottom:15px; background: #6f0a0
     position:relative;
     width:min(95vw, 960px);
     z-index:1;
+    max-height:calc(100vh - 120px);
+    overflow:auto;
 }
 body.filters-open {
     overflow:hidden;
@@ -223,6 +227,62 @@ body.filters-open {
     min-height:120px;
     padding-right:12px;
 }
+.filter-chip-list {
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    align-items:flex-start;
+}
+.filter-chip-list--compact {
+    gap:6px;
+}
+.filter-chip-list--scrollable {
+    max-height:180px;
+    overflow-y:auto;
+    padding-right:4px;
+    scrollbar-width:thin;
+    -webkit-overflow-scrolling:touch;
+}
+.filter-chip-list--scrollable::-webkit-scrollbar {
+    width:6px;
+}
+.filter-chip-list--scrollable::-webkit-scrollbar-thumb {
+    background:rgba(111,10,10,0.35);
+    border-radius:999px;
+}
+.filter-chip {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    padding:6px 14px;
+    font-size:0.9rem;
+    font-weight:600;
+    border-radius:999px;
+    border:1px solid rgba(111,10,10,0.24);
+    background:#ffffff;
+    color:#6f0a0a;
+    cursor:pointer;
+    user-select:none;
+    transition:background 0.2s ease, color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+.filter-chip:not(.is-selected):hover {
+    transform:translateY(-1px);
+    box-shadow:0 6px 16px rgba(111,10,10,0.12);
+}
+.filter-chip.is-selected {
+    background:#6f0a0a;
+    color:#ffffff;
+    box-shadow:0 10px 24px rgba(111,10,10,0.18);
+}
+.filter-chip:focus-visible {
+    outline:2px solid rgba(111,10,10,0.45);
+    outline-offset:2px;
+}
+.filter-chip-empty {
+    font-size:0.85rem;
+    color:rgba(51,51,51,0.6);
+}
+
 .filter-box--wide {
     grid-column:span 2;
 }
@@ -274,6 +334,17 @@ body.filters-open {
     }
     .filters::after {
         background:radial-gradient(circle at 90% 10%, rgba(111,10,10,0.1), transparent 45%);
+    }
+}
+
+@media (max-width:700px) {
+    .filters-popover {
+        padding:60px 12px 16px;
+    }
+    .filters-popover__panel {
+        width:100%;
+        max-width:620px;
+        max-height:calc(100vh - 80px);
     }
 }
 
@@ -502,23 +573,23 @@ body.filters-open {
                 </div>
                 <div class="filter-box">
                     <label>Страна</label>
-                    <select id="filter-country" multiple></select>
+                    <div id="filter-country" class="filter-chip-list" role="group" aria-label="Страна"></div>
                 </div>
                 <div class="filter-box" id="filter-color-box">
                     <label>Цвет</label>
-                    <select id="filter-color" multiple></select>
+                    <div id="filter-color" class="filter-chip-list filter-chip-list--compact" role="group" aria-label="Цвет"></div>
                 </div>
                 <div class="filter-box">
                     <label>Сахар</label>
-                    <select id="filter-sugar" multiple></select> 
+                    <div id="filter-sugar" class="filter-chip-list filter-chip-list--compact" role="group" aria-label="Сладость"></div> 
                 </div>
                 <div class="filter-box">
                     <label>Регион</label>
-                    <select id="filter-region" multiple></select>
+                    <div id="filter-region" class="filter-chip-list filter-chip-list--scrollable" role="group" aria-label="Регион"></div>
                 </div>
                 <div class="filter-box">
                     <label>Сорт винограда</label>
-                    <select id="filter-grape" multiple></select>
+                    <div id="filter-grape" class="filter-chip-list filter-chip-list--scrollable" role="group" aria-label="Виноград"></div>
                 </div>
                 <!-- Новый фильтр -->
                 <div class="filter-box filter-box--checkbox">
@@ -542,82 +613,93 @@ body.filters-open {
 <p>winelink сделан с душой <span class="bold">Lavroovich-ем</span></p>
 
 <script>
-// мапы
-const countryMap = { 
-    russia:"🇷🇺 Россия", usa:"🇺🇸 США", ukraine:"🇺🇦 Украина", france:"🇫🇷 Франция", italy:"🇮🇹 Италия", 
-    spain:"🇪🇸 Испания", germany:"🇩🇪 Германия", new_zealand:"🇳🇿 Новая Зеландия", georgia:"🇬🇪 Грузия", 
-    brazil:"🇧🇷 Бразилия", australia:"🇦🇺 Австралия", aurstria:"🇦🇹 Австрия", argentina:"🇦🇷 Аргентина", 
-    south_africa:"🇿🇦 Южная Африка", serbia: "🇷🇸 Сербия" 
+// словари
+const countryMap = {
+    russia: "Россия",
+    usa: "США",
+    ukraine: "Украина",
+    france: "Франция",
+    italy: "Италия",
+    spain: "Испания",
+    germany: "Германия",
+    new_zealand: "Новая Зеландия",
+    georgia: "Грузия",
+    brazil: "Бразилия",
+    australia: "Австралия",
+    aurstria: "Австрия",
+    argentina: "Аргентина",
+    south_africa: "ЮАР",
+    serbia: "Сербия"
 };
-const colorMap = { red:"Красное", white:"Белое", pink:"Розовое" };
-const sugarMap = { dry:"Сухое", semidry:"Полусухое", brut: "Брют" , sweet:"Сладкое" };
+const colorMap = { red: "Красное", white: "Белое", pink: "Розовое" };
+const sugarMap = { dry: "Сухое", semidry: "Полусухое", brut: "Брют", sweet: "Сладкое" };
 
-// получаем данные из шаблона
+// данные
 const allVines = {{ vines|tojson }};
 const presetFilters = {{ applyed_filters|tojson }};
 
-// фикс для undefined sparkling
+// нормализуем sparkling
 allVines.forEach(v => {
-    if(!v.sparkling) v.sparkling = "no"; // если undefined, подставляем no
+    if (!v.sparkling) v.sparkling = "no";
 });
 
-const list = document.querySelector('.wine-list');
-const sortedList = document.querySelector('.wine-list-sorted');
+const list = document.querySelector(".wine-list");
+const sortedList = document.querySelector(".wine-list-sorted");
 
-const filterPopover = document.getElementById('filters-popover');
-const filterToggleButton = document.getElementById('filters-toggle');
-const filterCloseButton = document.getElementById('filters-close');
-const filterBackdrop = document.getElementById('filters-backdrop');
+const filterPopover = document.getElementById("filters-popover");
+const filterToggleButton = document.getElementById("filters-toggle");
+const filterCloseButton = document.getElementById("filters-close");
+const filterBackdrop = document.getElementById("filters-backdrop");
 
-function setFilterPopupState(isOpen){
-    if(!filterToggleButton) return;
-    filterToggleButton.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-    filterToggleButton.classList.toggle('is-active', isOpen);
-    filterToggleButton.textContent = isOpen ? 'Скрыть фильтры' : 'Показать фильтры';
+function setFilterPopupState(isOpen) {
+    if (!filterToggleButton) return;
+    filterToggleButton.setAttribute("aria-expanded", isOpen ? "true" : "false");
+    filterToggleButton.classList.toggle("is-active", isOpen);
+    filterToggleButton.textContent = isOpen ? "Закрыть фильтры" : "Открыть фильтры";
 }
 
-function openFilters(){
-    if(!filterPopover) return;
-    filterPopover.classList.add('is-open');
-    filterPopover.setAttribute('aria-hidden','false');
-    document.body.classList.add('filters-open');
+function openFilters() {
+    if (!filterPopover) return;
+    filterPopover.classList.add("is-open");
+    filterPopover.setAttribute("aria-hidden", "false");
+    document.body.classList.add("filters-open");
     setFilterPopupState(true);
-    const firstInput = filterPopover.querySelector('#filter-name');
-    if(firstInput){
-        setTimeout(()=>firstInput.focus(), 60);
+    const firstInput = filterPopover.querySelector("#filter-name");
+    if (firstInput) {
+        setTimeout(() => firstInput.focus(), 60);
     }
 }
 
-function closeFilters(restoreFocus=true){
-    if(!filterPopover) return;
-    filterPopover.classList.remove('is-open');
-    filterPopover.setAttribute('aria-hidden','true');
-    document.body.classList.remove('filters-open');
+function closeFilters(restoreFocus = true) {
+    if (!filterPopover) return;
+    filterPopover.classList.remove("is-open");
+    filterPopover.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("filters-open");
     setFilterPopupState(false);
-    if(restoreFocus && filterToggleButton){
-        setTimeout(()=>filterToggleButton.focus(), 0);
+    if (restoreFocus && filterToggleButton) {
+        setTimeout(() => filterToggleButton.focus(), 0);
     }
 }
 
-if(filterToggleButton && filterPopover){
-    filterToggleButton.addEventListener('click', ()=>{
-        if(filterPopover.classList.contains('is-open')){
+if (filterToggleButton && filterPopover) {
+    filterToggleButton.addEventListener("click", () => {
+        if (filterPopover.classList.contains("is-open")) {
             closeFilters(false);
         } else {
             openFilters();
         }
     });
 
-    if(filterCloseButton){
-        filterCloseButton.addEventListener('click', ()=>closeFilters());
+    if (filterCloseButton) {
+        filterCloseButton.addEventListener("click", () => closeFilters());
     }
 
-    if(filterBackdrop){
-        filterBackdrop.addEventListener('click', ()=>closeFilters());
+    if (filterBackdrop) {
+        filterBackdrop.addEventListener("click", () => closeFilters());
     }
 
-    document.addEventListener('keydown', event=>{
-        if(event.key === 'Escape' && filterPopover.classList.contains('is-open')){
+    document.addEventListener("keydown", event => {
+        if (event.key === "Escape" && filterPopover.classList.contains("is-open")) {
             closeFilters();
         }
     });
@@ -625,171 +707,215 @@ if(filterToggleButton && filterPopover){
     closeFilters(false);
 }
 
-const selects = { 
-    country: document.querySelector('#filter-country'), 
-    color: document.querySelector('#filter-color'), 
-    region: document.querySelector('#filter-region'), 
-    grape: document.querySelector('#filter-grape'),
-    sugar: document.querySelector('#filter-sugar')
+const filterContainers = {
+    country: document.querySelector("#filter-country"),
+    color: document.querySelector("#filter-color"),
+    region: document.querySelector("#filter-region"),
+    grape: document.querySelector("#filter-grape"),
+    sugar: document.querySelector("#filter-sugar")
+};
+
+const filterState = {
+    name: "",
+    sparkling: false,
+    country: new Set(),
+    color: new Set(),
+    region: new Set(),
+    grape: new Set(),
+    sugar: new Set()
+};
+
+const filterMaps = {
+    country: countryMap,
+    color: colorMap,
+    sugar: sugarMap
+};
+
+const filterOptions = {
+    country: getUniqueValues(allVines, "country"),
+    color: getUniqueValues(allVines, "color"),
+    region: getUniqueValues(allVines, "region"),
+    grape: getUniqueValues(allVines, "grape"),
+    sugar: getUniqueValues(allVines, "sugar")
 };
 
 let filteredVines = allVines.slice();
 let priceIdCounter = 0;
 
-function escapeHtml(value){
-    if(value === null || value === undefined) return '';
+function escapeHtml(value) {
+    if (value === null || value === undefined) return "";
     return String(value).replace(/[&<>"']/g, char => ({
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#39;'
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        """: "&quot;",
+        "'": "&#39;"
     })[char]);
 }
 
-function createImageMarkup(v, isSub){
-    if(v.image_url){
-        const safeName = escapeHtml(v.name || '');
+function createImageMarkup(v, isSub) {
+    if (v.image_url) {
+        const safeName = escapeHtml(v.name || "");
         const height = isSub ? 260 : 340;
         return `
-            <div class=\"wine-card__media\">
-                <img src=\"${escapeHtml(v.image_url)}\" alt=\"Бутылка ${safeName}\" loading=\"lazy\" decoding=\"async\" fetchpriority=\"low\" width=\"240\" height=\"${height}\">
+            <div class="wine-card__media">
+                <img src="${escapeHtml(v.image_url)}" alt="Бутылка ${safeName}" loading="lazy" decoding="async" fetchpriority="low" width="240" height="${height}">
             </div>
         `;
     }
-    return '<div class="wine-card__media wine-card__media--placeholder">Фотография Не Найдена</div>';
+    return '<div class="wine-card__media wine-card__media--placeholder">Фото не загружено</div>';
 }
 
-function createWineCardMarkup(v, priceId, isSub=false){
-    const safeName = escapeHtml(v.name || '—');
-    const sugar = escapeHtml(sugarMap[v.sugar] || v.sugar || '—');
-    const color = escapeHtml(colorMap[v.color] || v.color || '—');
-    const country = escapeHtml(countryMap[v.country] || v.country || '—');
-    const grapesList = v.grape && v.grape.length ? v.grape.join(', ') : '—';
+function createWineCardMarkup(v, priceId, isSub = false) {
+    const safeName = escapeHtml(v.name || "—");
+    const sugar = escapeHtml(sugarMap[v.sugar] || v.sugar || "—");
+    const color = escapeHtml(colorMap[v.color] || v.color || "—");
+    const country = escapeHtml(countryMap[v.country] || v.country || "—");
+    const grapesList = Array.isArray(v.grape) && v.grape.length ? v.grape.join(", ") : "—";
     const grapes = escapeHtml(grapesList);
-    const region = escapeHtml(v.region || '—');
-    const priceText = escapeHtml(v.price ? `Цена: ${v.price} ₽` : 'Цена: —');
+    const region = escapeHtml(v.region || "—");
+    const priceText = escapeHtml(v.price ? `Цена: ${v.price} ₽` : "Цена: —");
     const imageMarkup = createImageMarkup(v, isSub);
 
     return `
         ${imageMarkup}
-        <div class=\"wine-card__body\">
+        <div class="wine-card__body">
             <h3>${safeName}</h3>
-            <div class=\"main-info\">${country} • ${color} • ${sugar}</div>
-            <div class=\"extra-info\">Регион: ${region} | Сорт винограда: ${grapes}</div>
-            <button type=\"button\" class=\"toggle-price\" aria-expanded=\"false\" aria-controls=\"${priceId}\">
-                <span aria-hidden=\"true\">👁</span>
-                <span class=\"toggle-price-label\">Показать цену</span>
+            <div class="main-info">${country} • ${color} • ${sugar}</div>
+            <div class="extra-info">Регион: ${region} | Виноград: ${grapes}</div>
+            <button type="button" class="toggle-price" aria-expanded="false" aria-controls="${priceId}">
+                <span aria-hidden="true">₽</span>
+                <span class="toggle-price-label">Показать цену</span>
             </button>
-            <div class=\"price is-hidden\" id=\"${priceId}\" role=\"button\" tabindex=\"0\" aria-hidden=\"true\" aria-label=\"Скрыть цену\" title=\"Нажмите, чтобы скрыть цену\">${priceText}</div>
+            <div class="price is-hidden" id="${priceId}" role="button" tabindex="0" aria-hidden="true" aria-label="Скрыть цену" title="Нажмите, чтобы скрыть цену">${priceText}</div>
         </div>
     `;
 }
 
-// функции утилиты
-function getUniqueValues(vines, field){ 
-    if(field==="grape") return [...new Set(vines.flatMap(v=>v.grape||[]))]; 
-    return [...new Set(vines.map(v=>v[field]).filter(x=>x))]; 
+function getUniqueValues(vines, field) {
+    if (field === "grape") return [...new Set(vines.flatMap(v => v.grape || []))];
+    return [...new Set(vines.map(v => v[field]).filter(Boolean))];
 }
 
-function getSelectedValues(select){ 
-    return Array.from(select.selectedOptions).map(o=>o.value); 
+function toArray(val) {
+    if (val == null) return [];
+    return Array.isArray(val) ? val : [val];
 }
 
-function populateSelect(select, values, map){ 
-    const current = getSelectedValues(select);
-    select.innerHTML = '';
-    values.sort((a,b)=>{
-        const textA = (map ? map[a] || a : a).toString().toLowerCase();
-        const textB = (map ? map[b] || b : b).toString().toLowerCase();
-        return textA.localeCompare(textB, 'ru');
-    });
-    values.forEach(val=>{
-        const option=document.createElement('option');
-        option.value=val;
-        option.textContent=map?map[val]||val:val;
-        if(current.includes(val)) option.selected=true;
-        select.appendChild(option);
+function sortFilterValues(values, map) {
+    const unique = [...new Set(values.filter(Boolean))];
+    return unique.sort((a, b) => {
+        const textA = (map && map[a]) ? map[a] : a;
+        const textB = (map && map[b]) ? map[b] : b;
+        return textA.toString().toLowerCase().localeCompare(textB.toString().toLowerCase(), "ru");
     });
 }
 
-function animateCards(cards){ 
-    cards.forEach((c,i)=>setTimeout(()=>c.classList.add('show'), i*50)); 
-}
+function renderFilterGroup(key, values) {
+    const container = filterContainers[key];
+    if (!container) return;
 
-function toArray(val){
-    if(val==null) return [];
-    if(Array.isArray(val)) return val;
-    return [val];
-}
+    const map = filterMaps[key] || {};
+    const selected = filterState[key] instanceof Set ? filterState[key] : new Set();
+    const sortedValues = sortFilterValues(values, map);
 
-function selectValues(select, values){
-    const vals = new Set(toArray(values).map(String));
-    Array.from(select.options).forEach(opt=>{
-        opt.selected = vals.has(String(opt.value));
-    });
-}
+    container.innerHTML = "";
 
-function renderVines(vines){
-    list.innerHTML='';
-    if(!vines.length){ 
-        list.innerHTML='<p style="text-align:center;font-weight:bold;">Всё — не найдено 😢</p>'; 
-        return; 
+    if (sortedValues.length === 0) {
+        const empty = document.createElement("span");
+        empty.className = "filter-chip-empty";
+        empty.textContent = "Нет доступных значений";
+        container.appendChild(empty);
+        return;
     }
-    const cards=[];
-    vines.forEach(v=>{
-        const card = document.createElement('div'); 
-        card.className='wine-card';
-        if(v.sparkling==="yes") card.classList.add('sparkling'); // выделяем игристое
-        card.dataset.pdf=v.pdf_file;
+
+    sortedValues.forEach(value => {
+        const chip = document.createElement("button");
+        chip.type = "button";
+        chip.className = "filter-chip";
+        chip.dataset.value = value;
+        chip.textContent = map[value] || value;
+        const isSelected = selected.has(value);
+        chip.classList.toggle("is-selected", isSelected);
+        chip.setAttribute("aria-pressed", isSelected ? "true" : "false");
+        chip.addEventListener("click", () => {
+            const set = filterState[key];
+            if (!(set instanceof Set)) return;
+            if (set.has(value)) {
+                set.delete(value);
+            } else {
+                set.add(value);
+            }
+            filterVines();
+        });
+        container.appendChild(chip);
+    });
+}
+
+function animateCards(cards) {
+    cards.forEach((c, i) => setTimeout(() => c.classList.add("show"), i * 50));
+}
+
+function renderVines(vines) {
+    list.innerHTML = "";
+    if (!vines.length) {
+        list.innerHTML = '<p style="text-align:center;font-weight:bold;">Вин по выбранным фильтрам нет</p>';
+        return;
+    }
+    const cards = [];
+    vines.forEach(v => {
+        const card = document.createElement("div");
+        card.className = "wine-card";
+        if (v.sparkling === "yes") card.classList.add("sparkling");
+        card.dataset.pdf = v.pdf_file;
         const priceId = `price-${++priceIdCounter}`;
         card.innerHTML = createWineCardMarkup(v, priceId);
-        list.appendChild(card); 
+        list.appendChild(card);
         cards.push(card);
         setupPriceToggle(card);
-        card.addEventListener('click',()=>window.open('/vinery/'+v.pdf_file,'_blank'));
+        card.addEventListener("click", () => window.open("/vinery/" + v.pdf_file, "_blank"));
     });
-    requestAnimationFrame(()=>animateCards(cards));
+    requestAnimationFrame(() => animateCards(cards));
 }
 
-function setupPriceToggle(card){
-    const button = card.querySelector('.toggle-price');
-    const priceElement = card.querySelector('.price');
-    if(!button || !priceElement) return;
-    const label = button.querySelector('.toggle-price-label');
-    priceElement.setAttribute('aria-hidden', priceElement.classList.contains('is-hidden') ? 'true' : 'false');
+function setupPriceToggle(card) {
+    const button = card.querySelector(".toggle-price");
+    const priceElement = card.querySelector(".price");
+    if (!button || !priceElement) return;
+    const label = button.querySelector(".toggle-price-label");
+    priceElement.setAttribute("aria-hidden", priceElement.classList.contains("is-hidden") ? "true" : "false");
 
     const showPrice = () => {
-        priceElement.classList.remove('is-hidden');
-        priceElement.setAttribute('aria-hidden','false');
-        button.classList.add('is-hidden');
-        button.setAttribute('aria-expanded','true');
-        if(label) label.textContent = 'Показать цену';
+        priceElement.classList.remove("is-hidden");
+        priceElement.setAttribute("aria-hidden", "false");
+        button.classList.add("is-hidden");
+        button.setAttribute("aria-expanded", "true");
+        if (label) label.textContent = "Скрыть цену";
     };
 
     const hidePrice = () => {
-        priceElement.classList.add('is-hidden');
-        priceElement.setAttribute('aria-hidden','true');
-        button.classList.remove('is-hidden');
-        button.setAttribute('aria-expanded','false');
-        if(label) label.textContent = 'Показать цену';
+        priceElement.classList.add("is-hidden");
+        priceElement.setAttribute("aria-hidden", "true");
+        button.classList.remove("is-hidden");
+        button.setAttribute("aria-expanded", "false");
+        if (label) label.textContent = "Показать цену";
     };
 
-    button.addEventListener('click', event => {
+    button.addEventListener("click", event => {
         event.stopPropagation();
         event.preventDefault();
         showPrice();
     });
 
-    priceElement.addEventListener('click', event => {
+    priceElement.addEventListener("click", event => {
         event.stopPropagation();
         event.preventDefault();
         hidePrice();
         button.focus();
     });
 
-    priceElement.addEventListener('keydown', event => {
-        if(event.key === 'Enter' || event.key === ' '){
+    priceElement.addEventListener("keydown", event => {
+        if (event.key === "Enter" || event.key === " ") {
             event.preventDefault();
             hidePrice();
             button.focus();
@@ -797,144 +923,198 @@ function setupPriceToggle(card){
     });
 }
 
-function filterVines(){
-    list.innerHTML=''; 
-    sortedList.innerHTML='';
-
-    const name = document.querySelector('#filter-name').value.toLowerCase();
-    const countries = getSelectedValues(selects.country);
-    const colors = getSelectedValues(selects.color);
-    let regions = getSelectedValues(selects.region);
-    const grapes = getSelectedValues(selects.grape);
-    const sugars = getSelectedValues(selects.sugar);
-    const sparklingChecked = document.querySelector('#filter-sparkling').checked;
-
-    // вычисляем доступные регионы после фильтра
-    const allowedRegions = allVines
-        .filter(v => (!sparklingChecked || v.sparkling==="yes") &&
-                     (countries.length===0 || countries.includes(v.country)))
-        .map(v=>v.region)
-        .filter(r=>r);
-    regions = regions.filter(r=>allowedRegions.includes(r));
-
-    filteredVines = allVines.filter(v=>
-        (!name || v.name.toLowerCase().includes(name)) &&
-        (countries.length===0 || countries.includes(v.country)) &&
-        (colors.length===0 || colors.includes(v.color)) &&
-        (regions.length===0 || regions.includes(v.region)) &&
-        (grapes.length===0 || (v.grape||[]).some(g=>grapes.includes(g))) &&
-        (sugars.length===0 || sugars.includes(v.sugar)) &&
-        (!sparklingChecked || v.sparkling==="yes") // фильтр игристого
-    );
-
-    populateSelect(selects.region, [...new Set(allowedRegions)]);
-    renderVines(filteredVines);
-    updateSorted();
+function countGroupItems(group) {
+    return Object.values(group).reduce((sum, arr) => sum + arr.length, 0);
 }
 
-function renderSortedVines(vines,criterion){
-    sortedList.innerHTML=''; 
-    if(!criterion) return;
+function filterVines() {
+    const countries = Array.from(filterState.country);
+    const sparklingChecked = !!filterState.sparkling;
+    const allowedRegionsRaw = allVines
+        .filter(v => (!sparklingChecked || v.sparkling === "yes") && (countries.length === 0 || countries.includes(v.country)))
+        .map(v => v.region)
+        .filter(Boolean);
+    const allowedRegions = sortFilterValues(allowedRegionsRaw);
 
-    let primaryKey='country', secondaryKey='color', secondaryMap=colorMap;
+    const currentRegions = Array.from(filterState.region);
+    const validRegions = currentRegions.filter(r => allowedRegions.includes(r));
+    if (validRegions.length !== currentRegions.length) {
+        filterState.region = new Set(validRegions);
+    }
 
-    const groups={};
-    vines.forEach(v=>{
-        const pKey = v[primaryKey]||'—';
-        const sKey = v[secondaryKey]||'—';
-        groups[pKey] = groups[pKey]||{};
-        groups[pKey][sKey] = groups[pKey][sKey]||[];
+    renderFilterGroup("country", filterOptions.country);
+    renderFilterGroup("color", filterOptions.color);
+    renderFilterGroup("sugar", filterOptions.sugar);
+    renderFilterGroup("grape", filterOptions.grape);
+    renderFilterGroup("region", allowedRegions);
+
+    const nameFilter = (filterState.name || "").trim().toLowerCase();
+    const colors = Array.from(filterState.color);
+    const regions = Array.from(filterState.region);
+    const grapes = Array.from(filterState.grape);
+    const sugars = Array.from(filterState.sugar);
+
+    priceIdCounter = 0;
+    filteredVines = allVines.filter(v => {
+        if (nameFilter && !(v.name && v.name.toLowerCase().includes(nameFilter))) return false;
+        if (countries.length && !countries.includes(v.country)) return false;
+        if (colors.length && !colors.includes(v.color)) return false;
+        if (regions.length && !regions.includes(v.region)) return false;
+        if (grapes.length) {
+            const vineGrapes = Array.isArray(v.grape) ? v.grape : [];
+            if (!vineGrapes.some(g => grapes.includes(String(g)))) return false;
+        }
+        if (sugars.length && !sugars.includes(v.sugar)) return false;
+        if (sparklingChecked && v.sparkling !== "yes") return false;
+        return true;
+    });
+
+    renderVines(filteredVines);
+    updateSorted();
+    updateColorHighlight();
+}
+
+function renderSortedVines(vines, criterion) {
+    sortedList.innerHTML = "";
+    if (!criterion || !vines.length) return;
+
+    let primaryKey = "country";
+    let secondaryKey = "color";
+    let secondaryMap = colorMap;
+
+    const groups = {};
+    vines.forEach(v => {
+        const pKey = v[primaryKey] || "—";
+        const sKey = v[secondaryKey] || "—";
+        if (!groups[pKey]) groups[pKey] = {};
+        if (!groups[pKey][sKey]) groups[pKey][sKey] = [];
         groups[pKey][sKey].push(v);
     });
 
-    Object.keys(groups).sort((a,b)=>Object.values(groups[b]).flat().length-Object.values(groups[a]).flat().length).forEach(pKey=>{
-        const primaryTitle = document.createElement('div'); 
-        primaryTitle.className='group-title'; 
-        primaryTitle.textContent = countryMap[pKey]||pKey;
-        sortedList.appendChild(primaryTitle);
+    Object.keys(groups)
+        .sort((a, b) => countGroupItems(groups[b]) - countGroupItems(groups[a]))
+        .forEach(pKey => {
+            const primaryTitle = document.createElement("div");
+            primaryTitle.className = "group-title";
+            primaryTitle.textContent = countryMap[pKey] || pKey;
+            sortedList.appendChild(primaryTitle);
 
-        Object.keys(groups[pKey]).sort((a,b)=>groups[pKey][b].length-groups[pKey][a].length).forEach(sKey=>{
-            const secondaryTitle = document.createElement('div'); 
-            secondaryTitle.className='group-title sub'; 
-            secondaryTitle.textContent = secondaryMap[sKey]||sKey;
-            sortedList.appendChild(secondaryTitle);
+            Object.keys(groups[pKey])
+                .sort((a, b) => groups[pKey][b].length - groups[pKey][a].length)
+                .forEach(sKey => {
+                    const secondaryTitle = document.createElement("div");
+                    secondaryTitle.className = "group-title sub";
+                    secondaryTitle.textContent = secondaryMap[sKey] || sKey;
+                    sortedList.appendChild(secondaryTitle);
 
-            groups[pKey][sKey].forEach(v=>{
-                const card=document.createElement('div'); 
-                card.className='wine-card sub';
-                if(v.sparkling==="yes") card.classList.add('sparkling'); // игристое
-                const priceId = `price-${++priceIdCounter}`;
-                card.innerHTML = createWineCardMarkup(v, priceId, true);
-                sortedList.appendChild(card);
-                setupPriceToggle(card);
-                card.addEventListener('click',()=>window.open('/vinery/'+v.pdf_file,'_blank'));
-                requestAnimationFrame(()=>card.classList.add('show'));
-            });
+                    groups[pKey][sKey].forEach(v => {
+                        const card = document.createElement("div");
+                        card.className = "wine-card sub";
+                        if (v.sparkling === "yes") card.classList.add("sparkling");
+                        const priceId = `price-${++priceIdCounter}`;
+                        card.innerHTML = createWineCardMarkup(v, priceId, true);
+                        sortedList.appendChild(card);
+                        setupPriceToggle(card);
+                        card.addEventListener("click", () => window.open("/vinery/" + v.pdf_file, "_blank"));
+                        requestAnimationFrame(() => card.classList.add("show"));
+                    });
+                });
         });
+}
+
+function updateSorted() {
+    if (!filteredVines.length) {
+        sortedList.style.display = "none";
+        list.style.display = "block";
+        return;
+    }
+    list.style.display = "none";
+    sortedList.style.display = "flex";
+    renderSortedVines(filteredVines, "country+color");
+}
+
+function updateColorHighlight() {
+    const colorBox = document.getElementById("filter-color-box");
+    if (!colorBox) return;
+    colorBox.classList.remove("red-highlight", "white-highlight", "pink-highlight");
+    const colors = filterState.color;
+    if (colors.has("red")) colorBox.classList.add("red-highlight");
+    else if (colors.has("white")) colorBox.classList.add("white-highlight");
+    else if (colors.has("pink")) colorBox.classList.add("pink-highlight");
+}
+
+function applyPresetFilters() {
+    try {
+        const pf = presetFilters || {};
+        const nameInput = document.querySelector("#filter-name");
+        if (nameInput) {
+            if (pf.name) {
+                nameInput.value = pf.name;
+                filterState.name = pf.name;
+            } else {
+                filterState.name = nameInput.value || "";
+            }
+        }
+        const sparklingInput = document.querySelector("#filter-sparkling");
+        if (sparklingInput) {
+            if ("sparkling" in pf) {
+                sparklingInput.checked = !!pf.sparkling;
+                filterState.sparkling = !!pf.sparkling;
+            } else {
+                filterState.sparkling = sparklingInput.checked;
+            }
+        }
+
+        ["country", "color", "region", "grape", "sugar"].forEach(key => {
+            if (pf[key]) {
+                filterState[key] = new Set(toArray(pf[key]).map(String));
+            }
+        });
+
+        filterVines();
+    } catch (e) {
+        filterState.name = "";
+        filterState.sparkling = false;
+        filterState.country = new Set();
+        filterState.color = new Set();
+        filterState.region = new Set();
+        filterState.grape = new Set();
+        filterState.sugar = new Set();
+
+        renderFilterGroup("country", filterOptions.country);
+        renderFilterGroup("color", filterOptions.color);
+        renderFilterGroup("sugar", filterOptions.sugar);
+        renderFilterGroup("grape", filterOptions.grape);
+        renderFilterGroup("region", filterOptions.region);
+
+        filteredVines = allVines.slice();
+        priceIdCounter = 0;
+        renderVines(filteredVines);
+        updateSorted();
+        updateColorHighlight();
+    }
+}
+
+const nameInputEl = document.querySelector("#filter-name");
+if (nameInputEl) {
+    filterState.name = nameInputEl.value || "";
+    nameInputEl.addEventListener("input", () => {
+        filterState.name = nameInputEl.value || "";
+        filterVines();
     });
 }
 
-function updateSorted(){ 
-    list.style.display='none'; 
-    sortedList.style.display='flex'; 
-    renderSortedVines(filteredVines,"country+color");
-}
-
-function updateColorHighlight(){
-    const colorBox=document.getElementById('filter-color-box');
-    colorBox.classList.remove("red-highlight","white-highlight","pink-highlight");
-    const colors=getSelectedValues(selects.color);
-    if(colors.includes("red")) colorBox.classList.add("red-highlight");
-    else if(colors.includes("white")) colorBox.classList.add("white-highlight");
-    else if(colors.includes("pink")) colorBox.classList.add("pink-highlight");
-}
-
-// populate selects
-populateSelect(selects.country,getUniqueValues(allVines,'country'),countryMap);
-populateSelect(selects.color,getUniqueValues(allVines,'color'),colorMap);
-populateSelect(selects.region,getUniqueValues(allVines,'region'));
-populateSelect(selects.grape,getUniqueValues(allVines,'grape'));
-populateSelect(selects.sugar,getUniqueValues(allVines,'sugar'),sugarMap);
-
-// применяем пресеты из applyed_filters (если переданы)
-function applyPresetFilters(){
-    try {
-        const pf = presetFilters || {};
-        if(pf.name) document.querySelector('#filter-name').value = pf.name;
-        if('sparkling' in pf) document.querySelector('#filter-sparkling').checked = !!pf.sparkling;
-
-        if(pf.country) selectValues(selects.country, pf.country);
-        if(pf.color) selectValues(selects.color, pf.color);
-        if(pf.sugar) selectValues(selects.sugar, pf.sugar);
-        // регион зависит от страны/игристого, выставим после первой фильтрации
-        // но если пришел регион — сохраним и попробуем применить после пересборки списка регионов
-        const pendingRegion = toArray(pf.region);
-
-        // первая фильтрация применит страну/цвет/сахар/игристое/имя
+const sparklingInputEl = document.querySelector("#filter-sparkling");
+if (sparklingInputEl) {
+    filterState.sparkling = sparklingInputEl.checked;
+    sparklingInputEl.addEventListener("change", () => {
+        filterState.sparkling = sparklingInputEl.checked;
         filterVines();
-        updateColorHighlight();
-
-        if(pendingRegion.length){
-            // после пересборки регионов выберем нужные и снова отфильтруем
-            selectValues(selects.region, pendingRegion);
-            filterVines();
-        }
-    } catch(e){
-        // если что-то не так с пресетом — просто отрисуем все вина
-        renderVines(allVines);
-        updateSorted();
-    }
+    });
 }
 
 applyPresetFilters();
 
-// события
-document.querySelectorAll('.filters input, .filters select').forEach(el=>{
-    el.addEventListener('input',()=>{
-        filterVines(); 
-        updateColorHighlight();
-    });
-});
 </script>
 </main>
 </body>

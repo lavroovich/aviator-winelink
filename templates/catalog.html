@@ -24,6 +24,161 @@ header { width:100%; display:flex; justify-content:center; padding:24px 18px 12p
 main { flex:1; padding:15px; }
 h1 { font-size:1.6rem; text-align:center; margin-bottom:15px; background: #6f0a0a; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
 
+.catalog-error-overlay {
+    position:fixed;
+    inset:0;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:40px 20px;
+    background:radial-gradient(circle at 18% 18%, rgba(255,215,200,0.22) 0%, rgba(255,215,200,0) 52%), linear-gradient(135deg, #5a0505 0%, #320101 100%);
+    color:#fff3e8;
+    z-index:120;
+}
+.catalog-error-overlay.is-visible {
+    display:flex;
+}
+.catalog-error-content {
+    width:min(560px, 100%);
+    padding:42px 48px;
+    border-radius:32px;
+    border:1px solid rgba(255,232,218,0.28);
+    background:rgba(20,4,4,0.55);
+    box-shadow:0 28px 50px rgba(0,0,0,0.45);
+    display:flex;
+    flex-direction:column;
+    gap:20px;
+    text-align:left;
+}
+.catalog-error-face {
+    font-size:4.5rem;
+    line-height:1;
+    opacity:0.85;
+}
+.catalog-error-title {
+    margin:0;
+    font-size:1.7rem;
+    font-weight:700;
+    letter-spacing:0.01em;
+}
+.catalog-error-subtitle {
+    margin:0;
+    font-size:1rem;
+    color:rgba(255,232,218,0.85);
+}
+.catalog-error-progress {
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    margin-top:6px;
+}
+.catalog-error-progress-label {
+    font-size:0.95rem;
+    font-weight:600;
+}
+.catalog-error-progress-bar {
+    position:relative;
+    height:6px;
+    border-radius:999px;
+    background:rgba(255,232,218,0.16);
+    overflow:hidden;
+}
+.catalog-error-progress-fill {
+    height:100%;
+    width:0%;
+    border-radius:999px;
+    background:linear-gradient(90deg, #ffb97d 0%, #ffd4b2 100%);
+    transition:width 0.5s ease;
+}
+.catalog-error-details {
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    padding:14px 18px;
+    border-radius:18px;
+    background:rgba(255,232,218,0.12);
+}
+.catalog-error-details-label {
+    text-transform:uppercase;
+    font-size:0.7rem;
+    letter-spacing:0.18em;
+    color:rgba(255,232,218,0.7);
+}
+.catalog-error-details-message {
+    font-size:1rem;
+    font-weight:600;
+    margin:0;
+    word-break:break-word;
+}
+.catalog-error-details-stack {
+    margin:0;
+    padding:12px 14px;
+    border-radius:12px;
+    background:rgba(21,4,4,0.55);
+    color:rgba(255,232,218,0.8);
+    font-family:'Courier New', monospace;
+    font-size:0.78rem;
+    max-height:160px;
+    overflow:auto;
+    white-space:pre-wrap;
+}
+.catalog-error-details-stack:empty {
+    display:none;
+}
+.catalog-error-actions {
+    display:flex;
+    justify-content:flex-start;
+    margin-top:6px;
+}
+.catalog-error-home {
+    border:none;
+    border-radius:999px;
+    padding:12px 32px;
+    font-size:0.95rem;
+    font-weight:700;
+    letter-spacing:0.03em;
+    background:#ffb97d;
+    color:#4a0505;
+    cursor:pointer;
+    transition:transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    box-shadow:0 16px 30px rgba(0,0,0,0.25);
+}
+.catalog-error-home:hover {
+    background:#ffd4b2;
+    transform:translateY(-2px);
+    box-shadow:0 20px 40px rgba(0,0,0,0.3);
+}
+.catalog-error-home:focus-visible {
+    outline:2px solid rgba(255,232,218,0.9);
+    outline-offset:3px;
+}
+.catalog-error-home:active {
+    transform:translateY(0);
+}
+body.catalog-error-active {
+    overflow:hidden;
+}
+@media (max-width:600px) {
+    .catalog-error-content {
+        padding:32px 28px;
+        border-radius:24px;
+    }
+    .catalog-error-face {
+        font-size:3.2rem;
+    }
+    .catalog-error-title {
+        font-size:1.4rem;
+    }
+}
+@media (prefers-reduced-motion:reduce) {
+    .catalog-error-progress-fill {
+        transition:none;
+    }
+    .catalog-error-home {
+        transition:none;
+    }
+}
+
 .filters-toggle-row {
     display:flex;
     justify-content:center;
@@ -539,6 +694,27 @@ body.filters-open {
 </style>
 </head>
 <body>
+<div class="catalog-error-overlay" id="catalog-error-overlay" aria-hidden="true">
+    <div class="catalog-error-content" role="alert" aria-live="assertive">
+        <div class="catalog-error-face">:(</div>
+        <h2 class="catalog-error-title">Винной карте нужна перезагрузка.</h2>
+        <p class="catalog-error-subtitle">Мы собираем сведения об ошибке и скоро попробуем восстановиться.</p>
+        <div class="catalog-error-progress">
+            <div class="catalog-error-progress-label" id="catalog-error-progress-label">0% готово</div>
+            <div class="catalog-error-progress-bar">
+                <div class="catalog-error-progress-fill" id="catalog-error-progress-fill"></div>
+            </div>
+        </div>
+        <div class="catalog-error-details">
+            <span class="catalog-error-details-label">Ошибка</span>
+            <p class="catalog-error-details-message" id="catalog-error-message">Неизвестная ошибка</p>
+            <pre class="catalog-error-details-stack" id="catalog-error-stack"></pre>
+        </div>
+        <div class="catalog-error-actions">
+            <button type="button" class="catalog-error-home" id="catalog-error-home">На главную</button>
+        </div>
+    </div>
+</div>
 <header>
     <div class="logo-container">
         <img src="{{ url_for('static', filename='logo.jpg') }}" alt="VineLink">
@@ -614,6 +790,143 @@ body.filters-open {
 
 <script>
 // словари
+(function setupCatalogBsod() {
+    const overlay = document.getElementById("catalog-error-overlay");
+    if (!overlay) return;
+
+    const messageEl = document.getElementById("catalog-error-message");
+    const stackEl = document.getElementById("catalog-error-stack");
+    const progressLabelEl = document.getElementById("catalog-error-progress-label");
+    const progressFillEl = document.getElementById("catalog-error-progress-fill");
+    const homeBtn = document.getElementById("catalog-error-home");
+
+    if (homeBtn) {
+        homeBtn.addEventListener("click", () => {
+            window.location.href = "/";
+        });
+    }
+
+    let isVisible = false;
+    let progressTimer = null;
+    let progressIndex = 0;
+    const progressSteps = [7, 19, 33, 47, 58, 72, 86];
+
+    function clearProgressTimer() {
+        if (progressTimer !== null) {
+            window.clearInterval(progressTimer);
+            progressTimer = null;
+        }
+    }
+
+    function startProgressAnimation() {
+        if (!progressFillEl || !progressLabelEl) return;
+        clearProgressTimer();
+        progressIndex = 0;
+        progressFillEl.style.width = "0%";
+        progressLabelEl.textContent = "0% готово";
+        progressTimer = window.setInterval(() => {
+            if (progressIndex >= progressSteps.length) {
+                clearProgressTimer();
+                return;
+            }
+            const value = progressSteps[progressIndex++];
+            progressFillEl.style.width = value + "%";
+            progressLabelEl.textContent = value + "% готово";
+        }, 900);
+    }
+
+    function finishProgressAnimation() {
+        if (!progressFillEl || !progressLabelEl) return;
+        clearProgressTimer();
+        progressFillEl.style.width = "100%";
+        progressLabelEl.textContent = "100% готово";
+    }
+
+    function unfoldPayload(payload) {
+        if (payload instanceof Error) {
+            return { message: payload.message || "Неизвестная ошибка", stack: payload.stack || "" };
+        }
+        if (payload && typeof payload === "object") {
+            if (payload.reason) return unfoldPayload(payload.reason);
+            if (payload.error) return unfoldPayload(payload.error);
+            const message = payload.message || payload.toString?.() || "Неизвестная ошибка";
+            let stack = payload.stack ? String(payload.stack) : "";
+            if (!stack && "filename" in payload && "lineno" in payload && "colno" in payload) {
+                const file = payload.filename ? String(payload.filename) : "";
+                const line = Number(payload.lineno);
+                const column = Number(payload.colno);
+                const parts = [];
+                if (file) parts.push(file);
+                if (!Number.isNaN(line)) parts.push(line);
+                if (!Number.isNaN(column)) parts.push(column);
+                if (parts.length) {
+                    stack = "at " + parts.join(":");
+                }
+            }
+            return { message: String(message), stack };
+        }
+        if (typeof payload === "string") {
+            return { message: payload, stack: "" };
+        }
+        if (payload === undefined || payload === null) {
+            return { message: "Неизвестная ошибка", stack: "" };
+        }
+        try {
+            return { message: JSON.stringify(payload), stack: "" };
+        } catch (_) {
+            return { message: String(payload), stack: "" };
+        }
+    }
+
+    function showOverlay(payload) {
+        if (isVisible) return;
+        isVisible = true;
+
+        console.error("WineLink catalog runtime error:", payload);
+
+        overlay.classList.add("is-visible");
+        overlay.setAttribute("aria-hidden", "false");
+        document.body.classList.add("catalog-error-active");
+
+        const info = unfoldPayload(payload);
+        if (messageEl && info.message) {
+            messageEl.textContent = info.message;
+        }
+        if (stackEl) {
+            stackEl.textContent = info.stack || "";
+        }
+
+        startProgressAnimation();
+        window.setTimeout(finishProgressAnimation, 12000);
+        if (homeBtn) {
+            window.setTimeout(() => {
+                try {
+                    homeBtn.focus();
+                } catch (_) {
+                    /* focus may fail if button hidden */
+                }
+            }, 60);
+        }
+    }
+
+    function triggerOverlay(payload) {
+        try {
+            showOverlay(payload);
+        } catch (err) {
+            console.error("WineLink catalog error handler failed:", err, payload);
+        }
+    }
+
+    window.addEventListener("error", event => {
+        const payload = event?.error ?? event;
+        triggerOverlay(payload);
+    });
+
+    window.addEventListener("unhandledrejection", event => {
+        const payload = event?.reason ?? event;
+        triggerOverlay(payload);
+    });
+})();
 const countryMap = {
     russia: "Россия",
     usa: "США",

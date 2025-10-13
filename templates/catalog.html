@@ -917,6 +917,20 @@ body.filters-open {
         }
     }
 
+    function syntheticFromOnError(message, source, lineno, colno, error) {
+        if (error) return error;
+        const fallback = new Error(message || "Неизвестная ошибка");
+        if (source) {
+            const line = Number.isFinite(lineno) ? lineno : "";
+            const column = Number.isFinite(colno) ? colno : "";
+            const parts = [source];
+            if (line !== "") parts.push(line);
+            if (column !== "") parts.push(column);
+            fallback.stack = "at " + parts.join(":");
+        }
+        return fallback;
+    }
+
     window.addEventListener("error", event => {
         const payload = event?.error ?? event;
         triggerOverlay(payload);
@@ -926,6 +940,16 @@ body.filters-open {
         const payload = event?.reason ?? event;
         triggerOverlay(payload);
     });
+
+    window.onerror = function onCatalogError(message, source, lineno, colno, error) {
+        triggerOverlay(syntheticFromOnError(message, source, lineno, colno, error));
+        return false;
+    };
+
+    window.WineLinkCatalogBsod = {
+        show: triggerOverlay,
+        isVisible: () => isVisible
+    };
 })();
 const countryMap = {
     russia: "Россия",

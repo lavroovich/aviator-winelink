@@ -941,6 +941,16 @@ body.filters-open {
         triggerOverlay(payload);
     });
 
+    window.addEventListener("error", event => {
+        const payload = event?.error ?? event;
+        triggerOverlay(payload);
+    }, true);
+
+    window.addEventListener("unhandledrejection", event => {
+        const payload = event?.reason ?? event;
+        triggerOverlay(payload);
+    }, true);
+
     window.onerror = function onCatalogError(message, source, lineno, colno, error) {
         triggerOverlay(syntheticFromOnError(message, source, lineno, colno, error));
         return false;

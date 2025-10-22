@@ -54,6 +54,35 @@ def _build_bottle_lookup():
     return lookup, bottles_dir
 
 
+def _asset_dir_for_extension(ext: str) -> str:
+    """Return subdirectory name that stores files for the provided extension."""
+    return "webp" if ext == ".webp" else "pdfs"
+
+
+def _infer_active_asset_extension(vines) -> str:
+    """Guess which extension is currently used for vine description files."""
+    for v in vines:
+        if v.pdf_file:
+            _, ext = os.path.splitext(v.pdf_file)
+            if ext:
+                return ext.lower()
+    # Fallback by checking which directory exists
+    webp_dir = os.path.join(app.root_path, "webp")
+    return ".webp" if os.path.isdir(webp_dir) else ".pdf"
+
+
+def _asset_path_info(filename: str):
+    """Return (safe_filename, directory_path, extension) for the requested asset."""
+    safe_name = os.path.basename(filename)
+    _, ext = os.path.splitext(safe_name)
+    ext = ext.lower()
+    if ext == "":
+        ext = ".webp"
+        safe_name = f"{safe_name}.webp"
+    directory = os.path.join(app.root_path, _asset_dir_for_extension(ext))
+    return safe_name, directory, ext
+
+
 @app.route("/winery/")
 def catalog():
 
@@ -146,11 +175,23 @@ def status_json():
 
         # filesystem checks for PDFs
         try:
-            pdfs_dir = os.path.join(app.root_path, "pdfs")
-            fs_files = set(os.listdir(pdfs_dir)) if os.path.isdir(pdfs_dir) else set()
-            db_files = set(v.pdf_file for v in vines if v.pdf_file)
-            missing = sorted(list(db_files - fs_files))
-            extra = sorted(list(fs_files - db_files))
+            asset_ext = _infer_active_asset_extension(vines)
+            asset_dir = os.path.join(app.root_path, _asset_dir_for_extension(asset_ext))
+
+            if os.path.isdir(asset_dir):
+                fs_files = {f for f in os.listdir(asset_dir) if f.lower().endswith(asset_ext)}
+            else:
+                fs_files = set()
+
+            db_files = {
+                v.pdf_file for v in vines
+                if v.pdf_file and v.pdf_file.lower().endswith(asset_ext)
+            }
+            missing = sorted(db_files - fs_files)
+            extra = sorted(fs_files - db_files)
+
+            details["pdfs_extension"] = asset_ext
+            details["pdfs_dir_name"] = os.path.basename(asset_dir)
             details["pdfs_in_dir"] = len(fs_files)
             details["pdfs_missing"] = missing
             details["pdfs_extra"] = extra
@@ -168,283 +209,6 @@ def status_json():
         "details": details,
     }
     return jsonify(payload)
-
-
-@app.route("/scan")
-def scan_resources():
-    db_error = None
-    try:
-        vines = Vine.query.order_by(Vine.name).all()
-    except Exception as exc:
-        db_error = str(exc)
-        vines = []
-
-    pdfs_dir = os.path.join(app.root_path, "pdfs")
-    pdf_dir_exists = os.path.isdir(pdfs_dir)
-    pdf_fs_files = set()
-    pdf_other_files = []
-    if pdf_dir_exists:
-        for entry in os.listdir(pdfs_dir):
-            entry_path = os.path.join(pdfs_dir, entry)
-            if not os.path.isfile(entry_path):
-                continue
-            if entry.lower().endswith(".pdf"):
-                pdf_fs_files.add(entry)
-            else:
-                pdf_other_files.append(entry)
-
-    bottles_dir = os.path.join(app.root_path, "bottles")
-    bottle_dir_exists = os.path.isdir(bottles_dir)
-    bottle_allowed_ext = {".png", ".jpg", ".jpeg", ".webp", ".gif", ".svg"}
-    bottle_lookup, _ = _build_bottle_lookup()
-    bottle_files = set(bottle_lookup.values()) if bottle_dir_exists else set()
-    bottle_other_files = []
-    bottle_base_registry = defaultdict(list)
-    if bottle_dir_exists:
-        for entry in os.listdir(bottles_dir):
-            entry_path = os.path.join(bottles_dir, entry)
-            if not os.path.isfile(entry_path):
-                continue
-            base, ext = os.path.splitext(entry)
-            if ext.lower() in bottle_allowed_ext:
-                bottle_base_registry[base.lower()].append(entry)
-            else:
-                bottle_other_files.append(entry)
-
-    total_vines = len(vines)
-    vines_with_pdf = [v for v in vines if (v.pdf_file or "").strip()]
-    pdf_names_in_db = {v.pdf_file.strip() for v in vines_with_pdf if (v.pdf_file or "").strip()}
-
-    missing_pdf_field = []
-    missing_pdf_on_disk = []
-    missing_bottle_images = []
-    used_bottle_files = set()
-    pdf_usage = defaultdict(list)
-    color_counter = Counter()
-    sugar_counter = Counter()
-    sparkling_counter = Counter()
-    country_counter = Counter()
-    grape_counter = Counter()
-    vines_missing_grape = []
-    vines_missing_price = []
-
-    for vine in vines:
-        pdf_name = (vine.pdf_file or "").strip()
-        if not pdf_name:
-            missing_pdf_field.append(vine)
-        else:
-            pdf_usage[pdf_name].append(vine)
-            if pdf_dir_exists and pdf_name not in pdf_fs_files:
-                missing_pdf_on_disk.append((vine, pdf_name))
-
-            base_name = os.path.splitext(pdf_name)[0].lower()
-            bottle_filename = bottle_lookup.get(base_name)
-            if bottle_filename:
-                used_bottle_files.add(bottle_filename)
-            else:
-                missing_bottle_images.append((vine, base_name))
-
-        color_counter[vine.color or "не указан"] += 1
-        sugar_counter[vine.sugar or "не указано"] += 1
-        sparkling_counter[(vine.sparkling or "no").lower()] += 1
-        country_counter[vine.country or "не указана"] += 1
-
-        grapes_raw = vine.grape
-        grape_values = []
-        if grapes_raw:
-            try:
-                parsed = json.loads(grapes_raw)
-                if isinstance(parsed, list):
-                    grape_values = [str(g).strip() for g in parsed if str(g).strip()]
-                elif isinstance(parsed, str) and parsed.strip():
-                    grape_values = [parsed.strip()]
-            except Exception:
-                grape_values = [str(grapes_raw).strip()]
-
-        if not grape_values:
-            vines_missing_grape.append(vine)
-        else:
-            for grape_name in grape_values:
-                grape_counter[grape_name] += 1
-
-        if not (vine.price or "").strip():
-            vines_missing_price.append(vine)
-
-    duplicate_pdfs = []
-    for pdf_name, linked_vines in pdf_usage.items():
-        if len(linked_vines) > 1:
-            duplicate_pdfs.append({
-                "pdf": pdf_name,
-                "vines": sorted(linked_vines, key=lambda v: (v.name or "").lower()),
-            })
-    duplicate_pdfs.sort(key=lambda item: item["pdf"].lower())
-
-    duplicate_bottle_entries = []
-    for base_name, entries in bottle_base_registry.items():
-        if len(entries) > 1:
-            duplicate_bottle_entries.append({
-                "base": base_name,
-                "files": sorted(entries),
-            })
-    duplicate_bottle_entries.sort(key=lambda item: item["base"])
-
-    unused_pdf_files = sorted(pdf_fs_files - pdf_names_in_db) if pdf_dir_exists else []
-    unused_bottle_files = sorted(bottle_files - used_bottle_files) if bottle_dir_exists else []
-
-    color_stats = sorted(color_counter.items(), key=lambda item: (-item[1], item[0]))
-    sugar_stats = sorted(sugar_counter.items(), key=lambda item: (-item[1], item[0]))
-    sparkling_stats = {
-        "yes": sparkling_counter.get("yes", 0),
-        "no": sparkling_counter.get("no", 0),
-        "other": sum(count for state, count in sparkling_counter.items() if state not in {"yes", "no"}),
-    }
-    country_stats = sorted(country_counter.items(), key=lambda item: (-item[1], item[0]))
-    grape_stats = sorted(grape_counter.items(), key=lambda item: (-item[1], item[0]))
-
-    summary = {
-        "total_vines": total_vines,
-        "with_pdf": len(vines_with_pdf),
-        "unique_pdf": len(pdf_names_in_db),
-        "pdf_dir_count": len(pdf_fs_files) if pdf_dir_exists else 0,
-        "bottle_dir_count": len(bottle_files) if bottle_dir_exists else 0,
-        "missing_pdf_field": len(missing_pdf_field),
-        "missing_pdf_disk": len(missing_pdf_on_disk),
-        "missing_bottles": len(missing_bottle_images),
-        "unused_pdf": len(unused_pdf_files),
-        "unused_bottles": len(unused_bottle_files),
-        "missing_grape": len(vines_missing_grape),
-        "missing_price": len(vines_missing_price),
-    }
-
-    directories = {
-        "pdf": {
-            "exists": pdf_dir_exists,
-            "path": os.path.relpath(pdfs_dir, base_dir),
-            "count": len(pdf_fs_files),
-            "other": sorted(pdf_other_files),
-        },
-        "bottles": {
-            "exists": bottle_dir_exists,
-            "path": os.path.relpath(bottles_dir, base_dir),
-            "count": len(bottle_files),
-            "other": sorted(bottle_other_files),
-        },
-    }
-
-    primary_metrics = [
-        {
-            "label": "Всего вин",
-            "value": summary["total_vines"],
-            "caption": "в каталоге",
-        },
-        {
-            "label": "С PDF",
-            "value": summary["with_pdf"],
-            "caption": "имеют файл",
-        },
-        {
-            "label": "Уникальных PDF",
-            "value": summary["unique_pdf"],
-            "caption": "имен в базе",
-        },
-        {
-            "label": "PDF в каталоге",
-            "value": directories["pdf"]["count"] if directories["pdf"]["exists"] else "—",
-            "caption": directories["pdf"]["path"] if directories["pdf"]["exists"] else "нет папки",
-        },
-        {
-            "label": "Изображений бутылок",
-            "value": directories["bottles"]["count"] if directories["bottles"]["exists"] else "—",
-            "caption": directories["bottles"]["path"] if directories["bottles"]["exists"] else "нет папки",
-        },
-    ]
-
-    quality_metrics = [
-        {
-            "label": "Нет PDF в записи",
-            "value": summary["missing_pdf_field"],
-            "caption": "записей",
-        },
-        {
-            "label": "PDF не найден",
-            "value": summary["missing_pdf_disk"],
-            "caption": "файлов",
-        },
-        {
-            "label": "Нет изображения",
-            "value": summary["missing_bottles"],
-            "caption": "бутылок",
-        },
-        {
-            "label": "Неиспользуемые PDF",
-            "value": summary["unused_pdf"],
-            "caption": "файлов",
-        },
-        {
-            "label": "Неиспользуемые изображения",
-            "value": summary["unused_bottles"],
-            "caption": "файлов",
-        },
-        {
-            "label": "Без сортов",
-            "value": summary["missing_grape"],
-            "caption": "вин",
-        },
-        {
-            "label": "Без цены",
-            "value": summary["missing_price"],
-            "caption": "вин",
-        },
-    ]
-
-    context = {
-        "summary": summary,
-        "directories": directories,
-        "missing_pdf_field": missing_pdf_field,
-        "missing_pdf_on_disk": missing_pdf_on_disk,
-        "missing_bottle_images": missing_bottle_images,
-        "unused_pdf_files": unused_pdf_files,
-        "unused_bottle_files": unused_bottle_files,
-        "duplicate_pdfs": duplicate_pdfs,
-        "duplicate_bottle_entries": duplicate_bottle_entries,
-        "color_stats": color_stats,
-        "sugar_stats": sugar_stats,
-        "sparkling_stats": sparkling_stats,
-        "country_stats": country_stats,
-        "grape_stats": grape_stats,
-        "vines_missing_grape": vines_missing_grape,
-        "vines_missing_price": vines_missing_price,
-        "db_error": db_error,
-        "primary_metrics": primary_metrics,
-        "quality_metrics": quality_metrics,
-    }
-
-    return render_template("scan.html", **context)
-
-@app.route("/dev-only/upload-test-vines")
-def upload_test_vines():
-    wine1 = Vine(
-        name="[ТЕСТОВОЕ] Каберне Совиньон",
-        color="red",
-        country="russia",
-        region="Краснодар",
-        grape=json.dumps(["Cabernet Sauvignon"]),
-        sugar="dry",
-        pdf_file="kab_sov.pdf"
-    )
-    wine2 = Vine(
-        name="[ТЕСТОВОЕ] Бордо купаж",
-        color="red",
-        country="france",
-        region="Бордо",
-        grape=json.dumps(["Cabernet Sauvignon", "Merlot", "Cabernet Franc"]),
-        sugar="dry",
-        pdf_file="bordeaux.pdf"
-    )
-    database.session.add(wine1)
-    database.session.add(wine2)
-    database.session.commit()
-    return "Test vines uploaded successfully!"
 
 @app.route("/vinery/qr/<filename>")
 def pdf_qr(filename):
@@ -472,10 +236,17 @@ def pdf_qr(filename):
 def pdf_view(filename):
     return render_template("viewer.html", filename=filename)
 
-@app.route("/vinery/pdfs/<filename>")
+@app.route("/vinery/description/<filename>")
 def pdfs(filename):
-    pdfs_dir = os.path.join(app.root_path, "pdfs")
-    return send_from_directory(pdfs_dir, filename, mimetype="application/pdf")
+    safe_name, directory, ext = _asset_path_info(filename)
+    if ext == ".webp" and not os.path.isdir(directory):
+        # fall back to legacy directory name if present
+        legacy = os.path.join(app.root_path, "webps")
+        if os.path.isdir(legacy):
+            directory = legacy
+    if not os.path.isdir(directory):
+        return "Not Found", 404
+    return send_from_directory(directory, safe_name)
 
 
 @app.route("/vinery/bottles/<path:filename>")

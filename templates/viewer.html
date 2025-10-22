@@ -1,9 +1,12 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ru">
 <head>
+{% set _filename = (filename or '') %}
+{% set _lower = _filename.lower() %}
+{% set is_image = _lower.endswith('.webp') or _lower.endswith('.png') or _lower.endswith('.jpg') or _lower.endswith('.jpeg') %}
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PDF — WineLink</title>
+<title>{{ 'WEBP' if is_image else 'PDF' }} - WineLink</title>
 <link href="https://fonts.googleapis.com/css?family=Alegreya+SC:500,700&display=swap" rel="stylesheet">
 <style>
 * { box-sizing:border-box; }
@@ -93,20 +96,33 @@ main {
     box-shadow:0 18px 36px rgba(111,10,10,0.1);
     overflow:hidden;
     display:flex;
-    position: absolute;
-    width: 50%;
-    height: 50%;
+    justify-content:center;
+    align-items:center;
+    padding:20px;
+}
+
+.viewer-frame iframe,
+.viewer-frame img {
+    width:100%;
+    height:100%;
+    border:none;
+    background:#fff;
+    display:block;
+}
+
+.viewer-frame img {
+    height:auto;
+    max-height:100%;
+    object-fit:contain;
 }
 
 .viewer-frame iframe {
-    width:100%;
-    border:none;
-    background:#fff;
-    flex:1;
-    display:block;
+    object-fit:contain;
 }
+
 @media (max-width:640px) {
     .back-link { width:100%; justify-content:center; }
+    .viewer-frame { min-height:50vh; padding:12px; }
 }
 </style>
 </head>
@@ -118,13 +134,16 @@ main {
 </header>
 <main>
     <div class="viewer-actions">
-        <a class="back-link" href="/">← Винная Карта</a>
+        <a class="back-link" href="/">← Вернуться назад</a>
     </div>
     <div class="viewer-frame">
-        <!-- #zoom=page-fit делает так, чтобы PDF полностью помещался -->
+        {% if is_image %}
+        <img src="{{ url_for('pdfs', filename=filename) }}" alt="Описание {{ _filename }}">
+        {% else %}
         <iframe src="{{ url_for('pdfs', filename=filename) }}#zoom=page-fit" allowfullscreen></iframe>
-        
+        {% endif %}
     </div>
 </main>
 </body>
 </html>
+

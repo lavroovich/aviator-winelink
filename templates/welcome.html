@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
@@ -188,7 +188,7 @@
           <div class="status-row"><span class="label">География</span><span class="val" id="st-geo">—</span></div>
           <div class="status-row"><span class="label">Сорта</span><span class="val" id="st-grapes">—</span></div>
           <div class="status-row"><span class="label">Сладость</span><span class="val" id="st-sugars">—</span></div>
-          <div class="status-row"><span class="label">PDF</span><span class="val" id="st-pdfs">—</span></div>
+          <div class="status-row"><span class="label" id="st-pdfs-label">WEBP</span><span class="val" id="st-pdfs">—</span></div>
           <div class="status-row"><span class="label">Версия</span><span class="val" id="st-ver">—</span></div>
         </div>
       </div>
@@ -249,7 +249,7 @@
         try {
           const res = await fetch('/status.json', { cache: 'no-store' });
           const data = await res.json();
-          const ruColor = { red: 'красн.', white: 'бел.', pink: 'роз.' };
+          const ruColor = { red: 'Кр.', white: 'Бел.', pink: 'Роз.' };
           const envHuman = data.env === 'vercel' ? 'production (vercel)' : 'local';
           const dbMode = data.db_mode === 'ro' ? 'read-only' : 'read-write';
           const colors = data.details.colors || {};
@@ -257,13 +257,15 @@
             ? Object.entries(colors)
                 .map(([k,v]) => `${ruColor[k] || k}: ${v}`)
                 .join(', ')
-            : '—';
+            : '-';
           const sugars = (data.details.sugars_present || []).join(', ');
-          const geo = `страны: ${data.details.countries_total ?? '—'}, регионы: ${data.details.regions_total ?? '—'}`;
-          const vines = `${data.details.vines_total ?? '—'} (игристых: ${data.details.sparkling_yes ?? 0})`;
+          const geo = `стран: ${data.details.countries_total ?? '-'}, регионов: ${data.details.regions_total ?? '-'}`;
+          const vines = `${data.details.vines_total ?? '-'} (игристых: ${data.details.sparkling_yes ?? 0})`;
+          const assetExt = (data.details.pdfs_extension || '.pdf').replace('.', '').toUpperCase();
+          const assetDir = data.details.pdfs_dir_name || (assetExt === 'WEBP' ? 'webp' : 'pdfs');
           const pdfMissing = data.details.pdfs_missing || [];
           const pdfExtra = data.details.pdfs_extra || [];
-          const pdfs = `в папке: ${data.details.pdfs_in_dir ?? '—'}, недостаёт: ${pdfMissing.length}, лишние: ${pdfExtra.length}`;
+          const filesSummary = `в папке ${assetDir}: ${data.details.pdfs_in_dir ?? '-'}, недостаёт: ${pdfMissing.length}, лишние: ${pdfExtra.length}`;
 
           document.getElementById('st-env').textContent = `${envHuman}, DB ${dbMode}`;
           document.getElementById('st-db').innerHTML = data.db_connected
@@ -272,17 +274,21 @@
           document.getElementById('st-vines').textContent = vines;
           document.getElementById('st-colors').textContent = colorStr;
           document.getElementById('st-geo').textContent = geo;
-          document.getElementById('st-grapes').textContent = `${data.details.grapes_total ?? '—'} уникальных`;
-          document.getElementById('st-sugars').textContent = sugars || '—';
+          document.getElementById('st-grapes').textContent = `${data.details.grapes_total ?? '-'} сортов`;
+          document.getElementById('st-sugars').textContent = sugars || '-';
+          const labelEl = document.getElementById('st-pdfs-label');
+          if (labelEl) labelEl.textContent = assetExt;
           const pdfEl = document.getElementById('st-pdfs');
-          pdfEl.textContent = pdfs;
+          pdfEl.textContent = filesSummary;
           if (pdfMissing.length || pdfExtra.length) {
             const tip = [];
-            if (pdfMissing.length) tip.push(`нет в FS: ${pdfMissing.slice(0,20).join(', ')}${pdfMissing.length>20?'…':''}`);
-            if (pdfExtra.length) tip.push(`лишние в FS: ${pdfExtra.slice(0,20).join(', ')}${pdfExtra.length>20?'…':''}`);
+            if (pdfMissing.length) tip.push(`нет в FS: ${pdfMissing.slice(0,20).join(', ')}${pdfMissing.length>20?'...':''}`);
+            if (pdfExtra.length) tip.push(`лишние в FS: ${pdfExtra.slice(0,20).join(', ')}${pdfExtra.length>20?'...':''}`);
             pdfEl.title = tip.join(' | ');
+          } else {
+            pdfEl.removeAttribute('title');
           }
-          document.getElementById('st-ver').textContent = data.version || '—';
+          document.getElementById('st-ver').textContent = data.version || '-';
         } catch (e) {
           document.getElementById('st-db').innerHTML = '<span class="err">error</span>';
         }
@@ -291,3 +297,4 @@
   </script>
 </body>
 </html>
+

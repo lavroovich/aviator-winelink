@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Винная Карта — WineLink</title>
+<title>Винная Карта — Авиатор</title>
 <link href="https://fonts.googleapis.com/css?family=Alegreya+SC:500,700&display=swap" rel="stylesheet">
 <style>
 body { margin:0; padding:0; min-height:100vh; font-family:'Alegreya SC', sans-serif; background:#faf7f0; color:#333; display:flex; flex-direction:column; }
@@ -735,8 +735,8 @@ body.filters-open {
         <div class="filters">
             <div class="filters__header">
                 <div class="filters__intro">
-                    <h2 class="filters__title" id="filters-title">Подбор по параметрам</h2>
-                    <p class="filters__hint">Выберите параметры, чтобы быстрее найти нужное вино внутри нашей коллекции.</p>
+                    <h2 class="filters__title" id="filters-title">Подбор по фильтрам</h2>
+                    <p class="filters__hint">Выберите фильтры, чтобы быстрее найти нужное вино</p>
                 </div>
                 <button type="button" class="filters__close" id="filters-close" aria-label="Закрыть фильтры">
                     Закрыть
@@ -849,7 +849,19 @@ body.filters-open {
         if (payload && typeof payload === "object") {
             if (payload.reason) return unfoldPayload(payload.reason);
             if (payload.error) return unfoldPayload(payload.error);
-            const message = payload.message || payload.toString?.() || "Неизвестная ошибка";
+            let message = "";
+            if (typeof payload.message === "string" && payload.message) {
+                message = payload.message;
+            } else if (typeof payload.toString === "function") {
+                try {
+                    message = payload.toString();
+                } catch (toStringError) {
+                    message = "";
+                }
+            }
+            if (!message) {
+                message = "Неизвестная ошибка";
+            }
             let stack = payload.stack ? String(payload.stack) : "";
             if (!stack && "filename" in payload && "lineno" in payload && "colno" in payload) {
                 const file = payload.filename ? String(payload.filename) : "";
@@ -931,23 +943,23 @@ body.filters-open {
         return fallback;
     }
 
-    window.addEventListener("error", event => {
-        const payload = event?.error ?? event;
+    window.addEventListener("error", function (event) {
+        const payload = event && typeof event.error !== "undefined" ? event.error : event;
         triggerOverlay(payload);
     });
 
-    window.addEventListener("unhandledrejection", event => {
-        const payload = event?.reason ?? event;
+    window.addEventListener("unhandledrejection", function (event) {
+        const payload = event && typeof event.reason !== "undefined" ? event.reason : event;
         triggerOverlay(payload);
     });
 
-    window.addEventListener("error", event => {
-        const payload = event?.error ?? event;
+    window.addEventListener("error", function (event) {
+        const payload = event && typeof event.error !== "undefined" ? event.error : event;
         triggerOverlay(payload);
     }, true);
 
-    window.addEventListener("unhandledrejection", event => {
-        const payload = event?.reason ?? event;
+    window.addEventListener("unhandledrejection", function (event) {
+        const payload = event && typeof event.reason !== "undefined" ? event.reason : event;
         triggerOverlay(payload);
     }, true);
 
@@ -958,7 +970,9 @@ body.filters-open {
 
     window.WineLinkCatalogBsod = {
         show: triggerOverlay,
-        isVisible: () => isVisible
+        isVisible: function () {
+            return isVisible;
+        }
     };
 })();
 const countryMap = {
@@ -1086,6 +1100,15 @@ const filterOptions = {
     sugar: getUniqueValues(allVines, "sugar")
 };
 
+const sortedFilterOptions = {
+    country: sortFilterValues(filterOptions.country, filterMaps.country),
+    color: sortFilterValues(filterOptions.color, filterMaps.color),
+    sugar: sortFilterValues(filterOptions.sugar, filterMaps.sugar),
+    grape: sortFilterValues(filterOptions.grape, filterMaps.grape),
+    region: sortFilterValues(filterOptions.region)
+};
+
+
 let filteredVines = allVines.slice();
 let priceIdCounter = 0;
 
@@ -1123,34 +1146,65 @@ function createImageMarkup(v, isSub) {
 }
 
 function createWineCardMarkup(v, priceId, isSub = false) {
-    const safeName = escapeHtml(v.name || "—");
-    const sugar = escapeHtml(sugarMap[v.sugar] || v.sugar || "—");
-    const color = escapeHtml(colorMap[v.color] || v.color || "—");
-    const country = escapeHtml(countryMap[v.country] || v.country || "—");
-    const grapesList = Array.isArray(v.grape) && v.grape.length ? v.grape.join(", ") : "—";
-    const grapes = escapeHtml(grapesList);
-    const region = escapeHtml(v.region || "—");
-    const priceText = escapeHtml(v.price ? `Цена: ${v.price} ₽` : "Цена: —");
+    const safeName = escapeHtml(v.name || "-");
+    const sugar = escapeHtml(sugarMap[v.sugar] || v.sugar || "-");
+    const color = escapeHtml(colorMap[v.color] || v.color || "-");
+    const country = escapeHtml(countryMap[v.country] || v.country || "-");
+    const grapesSource = Array.isArray(v.grape) && v.grape.length ? v.grape : [];
+    const grapes = escapeHtml(grapesSource.join(", ") || "-");
+    const region = escapeHtml(v.region || "-");
+    const priceValue = v.price ? "Цена: " + v.price + " руб." : "Цена: -";
+    const priceText = escapeHtml(priceValue);
     const imageMarkup = createImageMarkup(v, isSub);
 
     return `
         ${imageMarkup}
         <div class="wine-card__body">
             <h3>${safeName}</h3>
-            <div class="main-info">${country} • ${color} • ${sugar}</div>
-            <div class="extra-info">Регион: ${region} | Виноград: ${grapes}</div>
-            <button type="button" class="toggle-price" aria-expanded="false" aria-controls="${priceId}">
-                <span aria-hidden="true">₽</span>
+            <div class="main-info">${country} / ${color} / ${sugar}</div>
+            <div class="extra-info">Регион: ${region} | Сорта: ${grapes}</div>
+            <button
+                type="button"
+                class="toggle-price"
+                aria-expanded="false"
+                aria-controls="${priceId}"
+                data-label-show="Показать цену"
+                data-label-hide="Скрыть цену"
+            >
+                <span aria-hidden="true">руб.</span>
                 <span class="toggle-price-label">Показать цену</span>
             </button>
-            <div class="price is-hidden" id="${priceId}" role="button" tabindex="0" aria-hidden="true" aria-label="Скрыть цену" title="Нажмите, чтобы скрыть цену">${priceText}</div>
+            <div
+                class="price is-hidden"
+                id="${priceId}"
+                role="button"
+                tabindex="0"
+                aria-hidden="true"
+                aria-label="Скрыть цену"
+                title="Нажмите, чтобы скрыть цену"
+            >${priceText}</div>
         </div>
     `;
 }
 
 function getUniqueValues(vines, field) {
-    if (field === "grape") return [...new Set(vines.flatMap(v => v.grape || []))];
-    return [...new Set(vines.map(v => v[field]).filter(Boolean))];
+    const values = [];
+    if (field === "grape") {
+        for (let i = 0; i < vines.length; i += 1) {
+            const grapeList = Array.isArray(vines[i].grape) ? vines[i].grape : [];
+            for (let j = 0; j < grapeList.length; j += 1) {
+                values.push(grapeList[j]);
+            }
+        }
+    } else {
+        for (let k = 0; k < vines.length; k += 1) {
+            const value = vines[k][field];
+            if (value) {
+                values.push(value);
+            }
+        }
+    }
+    return Array.from(new Set(values));
 }
 
 function toArray(val) {
@@ -1159,33 +1213,33 @@ function toArray(val) {
 }
 
 function sortFilterValues(values, map) {
-    const unique = [...new Set(values.filter(Boolean))];
-    return unique.sort((a, b) => {
-        const textA = (map && map[a]) ? map[a] : a;
-        const textB = (map && map[b]) ? map[b] : b;
+    const unique = Array.from(new Set((values || []).filter(Boolean)));
+    return unique.sort(function (a, b) {
+        const textA = map && map[a] ? map[a] : a;
+        const textB = map && map[b] ? map[b] : b;
         return textA.toString().toLowerCase().localeCompare(textB.toString().toLowerCase(), "ru");
     });
-}
-
-function renderFilterGroup(key, values) {
+}function renderFilterGroup(key, values, skipSort) {
     const container = filterContainers[key];
     if (!container) return;
 
     const map = filterMaps[key] || {};
     const selected = filterState[key] instanceof Set ? filterState[key] : new Set();
-    const sortedValues = sortFilterValues(values, map);
+    const sortedValues = skipSort ? values : sortFilterValues(values, map);
 
     container.innerHTML = "";
 
-    if (sortedValues.length === 0) {
+    if (!sortedValues || !sortedValues.length) {
         const empty = document.createElement("span");
         empty.className = "filter-chip-empty";
-        empty.textContent = "Нет доступных значений";
+        empty.textContent = "Нет значений для фильтра";
         container.appendChild(empty);
         return;
     }
 
-    sortedValues.forEach(value => {
+    const fragment = document.createDocumentFragment();
+    for (let i = 0; i < sortedValues.length; i += 1) {
+        const value = sortedValues[i];
         const chip = document.createElement("button");
         chip.type = "button";
         chip.className = "filter-chip";
@@ -1194,7 +1248,7 @@ function renderFilterGroup(key, values) {
         const isSelected = selected.has(value);
         chip.classList.toggle("is-selected", isSelected);
         chip.setAttribute("aria-pressed", isSelected ? "true" : "false");
-        chip.addEventListener("click", () => {
+        chip.addEventListener("click", function () {
             const set = filterState[key];
             if (!(set instanceof Set)) return;
             if (set.has(value)) {
@@ -1204,130 +1258,171 @@ function renderFilterGroup(key, values) {
             }
             filterVines();
         });
-        container.appendChild(chip);
-    });
+        fragment.appendChild(chip);
+    }
+    container.appendChild(fragment);
+}
+
+function arrayIncludes(list, value) {
+    return Array.isArray(list) && list.indexOf(value) !== -1;
 }
 
 function animateCards(cards) {
-    cards.forEach((c, i) => setTimeout(() => c.classList.add("show"), i * 50));
+    if (!cards || !cards.length) return;
+    let index = 0;
+    function step() {
+        const chunkEnd = Math.min(index + 8, cards.length);
+        for (; index < chunkEnd; index += 1) {
+            cards[index].classList.add("show");
+        }
+        if (index < cards.length) {
+            window.requestAnimationFrame(step);
+        }
+    }
+    window.requestAnimationFrame(step);
 }
+
+function buildWineCard(v, isSub) {
+    const card = document.createElement("div");
+    card.className = isSub ? "wine-card sub" : "wine-card";
+    if (v.sparkling === "yes") {
+        card.classList.add("sparkling");
+    }
+    card.setAttribute("data-pdf", v.pdf_file || "");
+    const priceId = "price-" + (++priceIdCounter);
+    card.innerHTML = createWineCardMarkup(v, priceId, isSub);
+    return card;
+}
+
+function findParentByClass(node, className) {
+    let current = node;
+    while (current && current !== document) {
+        if (current.classList && current.classList.contains(className)) {
+            return current;
+        }
+        current = current.parentNode;
+    }
+    return null;
+}
+
+function showPriceForButton(button) {
+    const priceId = button.getAttribute("aria-controls");
+    let priceElement = priceId ? document.getElementById(priceId) : null;
+    if (!priceElement) {
+        const card = findParentByClass(button, "wine-card");
+        if (card) {
+            priceElement = card.querySelector(".price");
+        }
+    }
+    if (!priceElement) return;
+
+    priceElement.classList.remove("is-hidden");
+    priceElement.setAttribute("aria-hidden", "false");
+    button.classList.add("is-hidden");
+    button.setAttribute("aria-expanded", "true");
+
+    const label = button.querySelector(".toggle-price-label");
+    const hideLabel = button.getAttribute("data-label-hide");
+    if (label && hideLabel) {
+        label.textContent = hideLabel;
+    }
+}
+
+function hidePriceForElement(priceElement, focusBack) {
+    const card = findParentByClass(priceElement, "wine-card");
+    if (!card) return;
+
+    priceElement.classList.add("is-hidden");
+    priceElement.setAttribute("aria-hidden", "true");
+
+    const button = card.querySelector(".toggle-price");
+    if (!button) return;
+
+    button.classList.remove("is-hidden");
+    button.setAttribute("aria-expanded", "false");
+
+    const label = button.querySelector(".toggle-price-label");
+    const showLabel = button.getAttribute("data-label-show");
+    if (label && showLabel) {
+        label.textContent = showLabel;
+    }
+    if (focusBack) {
+        try {
+            button.focus();
+        } catch (focusError) {
+            /* ignore focus issues */
+        }
+    }
+}
+
+function handleCatalogClick(event) {
+    const target = event.target || event.srcElement;
+    if (!target) return;
+
+    const toggleButton = findParentByClass(target, "toggle-price");
+    if (toggleButton) {
+        event.preventDefault();
+        event.stopPropagation();
+        showPriceForButton(toggleButton);
+        return;
+    }
+
+    const priceElement = findParentByClass(target, "price");
+    if (priceElement && !priceElement.classList.contains("is-hidden")) {
+        event.preventDefault();
+        event.stopPropagation();
+        hidePriceForElement(priceElement, true);
+        return;
+    }
+
+    const card = findParentByClass(target, "wine-card");
+    if (!card) return;
+    const pdf = card.getAttribute("data-pdf");
+    if (pdf) {
+        window.open("/vinery/" + pdf, "_blank");
+    }
+}
+
+function handleCatalogKeydown(event) {
+    const target = event.target || event.srcElement;
+    if (!target) return;
+
+    const priceElement = findParentByClass(target, "price");
+    if (!priceElement || priceElement.classList.contains("is-hidden")) return;
+
+    const key = event.key || event.keyCode;
+    if (key === "Enter" || key === 13 || key === " " || key === 32) {
+        event.preventDefault();
+        hidePriceForElement(priceElement, true);
+    }
+}
+
+function attachCatalogHandlers(container) {
+    if (!container || container.__catalogHandlersAttached) return;
+    container.addEventListener("click", handleCatalogClick);
+    container.addEventListener("keydown", handleCatalogKeydown);
+    container.__catalogHandlersAttached = true;
+}
+
+attachCatalogHandlers(list);
+attachCatalogHandlers(sortedList);
 
 function renderVines(vines) {
     list.innerHTML = "";
     if (!vines.length) {
-        list.innerHTML = '<p style="text-align:center;font-weight:bold;">Вин по выбранным фильтрам нет</p>';
+        list.innerHTML = '<p style="text-align:center;font-weight:bold;">Нет вин под выбранные фильтры</p>';
         return;
     }
-    const cards = [];
-    vines.forEach(v => {
-        const card = document.createElement("div");
-        card.className = "wine-card";
-        if (v.sparkling === "yes") card.classList.add("sparkling");
-        card.dataset.pdf = v.pdf_file;
-        const priceId = `price-${++priceIdCounter}`;
-        card.innerHTML = createWineCardMarkup(v, priceId);
-        list.appendChild(card);
-        cards.push(card);
-        setupPriceToggle(card);
-        card.addEventListener("click", () => window.open("/vinery/" + v.pdf_file, "_blank"));
-    });
-    requestAnimationFrame(() => animateCards(cards));
-}
 
-function setupPriceToggle(card) {
-    const button = card.querySelector(".toggle-price");
-    const priceElement = card.querySelector(".price");
-    if (!button || !priceElement) return;
-    const label = button.querySelector(".toggle-price-label");
-    priceElement.setAttribute("aria-hidden", priceElement.classList.contains("is-hidden") ? "true" : "false");
-
-    const showPrice = () => {
-        priceElement.classList.remove("is-hidden");
-        priceElement.setAttribute("aria-hidden", "false");
-        button.classList.add("is-hidden");
-        button.setAttribute("aria-expanded", "true");
-        if (label) label.textContent = "Скрыть цену";
-    };
-
-    const hidePrice = () => {
-        priceElement.classList.add("is-hidden");
-        priceElement.setAttribute("aria-hidden", "true");
-        button.classList.remove("is-hidden");
-        button.setAttribute("aria-expanded", "false");
-        if (label) label.textContent = "Показать цену";
-    };
-
-    button.addEventListener("click", event => {
-        event.stopPropagation();
-        event.preventDefault();
-        showPrice();
-    });
-
-    priceElement.addEventListener("click", event => {
-        event.stopPropagation();
-        event.preventDefault();
-        hidePrice();
-        button.focus();
-    });
-
-    priceElement.addEventListener("keydown", event => {
-        if (event.key === "Enter" || event.key === " ") {
-            event.preventDefault();
-            hidePrice();
-            button.focus();
-        }
-    });
-}
-
-function countGroupItems(group) {
-    return Object.values(group).reduce((sum, arr) => sum + arr.length, 0);
-}
-
-function filterVines() {
-    const countries = Array.from(filterState.country);
-    const sparklingChecked = !!filterState.sparkling;
-    const allowedRegionsRaw = allVines
-        .filter(v => (!sparklingChecked || v.sparkling === "yes") && (countries.length === 0 || countries.includes(v.country)))
-        .map(v => v.region)
-        .filter(Boolean);
-    const allowedRegions = sortFilterValues(allowedRegionsRaw);
-
-    const currentRegions = Array.from(filterState.region);
-    const validRegions = currentRegions.filter(r => allowedRegions.includes(r));
-    if (validRegions.length !== currentRegions.length) {
-        filterState.region = new Set(validRegions);
+    const fragment = document.createDocumentFragment();
+    const cardsToAnimate = [];
+    for (let i = 0; i < vines.length; i += 1) {
+        const card = buildWineCard(vines[i], false);
+        fragment.appendChild(card);
+        cardsToAnimate.push(card);
     }
-
-    renderFilterGroup("country", filterOptions.country);
-    renderFilterGroup("color", filterOptions.color);
-    renderFilterGroup("sugar", filterOptions.sugar);
-    renderFilterGroup("grape", filterOptions.grape);
-    renderFilterGroup("region", allowedRegions);
-
-    const nameFilter = (filterState.name || "").trim().toLowerCase();
-    const colors = Array.from(filterState.color);
-    const regions = Array.from(filterState.region);
-    const grapes = Array.from(filterState.grape);
-    const sugars = Array.from(filterState.sugar);
-
-    priceIdCounter = 0;
-    filteredVines = allVines.filter(v => {
-        if (nameFilter && !(v.name && v.name.toLowerCase().includes(nameFilter))) return false;
-        if (countries.length && !countries.includes(v.country)) return false;
-        if (colors.length && !colors.includes(v.color)) return false;
-        if (regions.length && !regions.includes(v.region)) return false;
-        if (grapes.length) {
-            const vineGrapes = Array.isArray(v.grape) ? v.grape : [];
-            if (!vineGrapes.some(g => grapes.includes(String(g)))) return false;
-        }
-        if (sugars.length && !sugars.includes(v.sugar)) return false;
-        if (sparklingChecked && v.sparkling !== "yes") return false;
-        return true;
-    });
-
-    renderVines(filteredVines);
-    updateSorted();
-    updateColorHighlight();
+    list.appendChild(fragment);
+    animateCards(cardsToAnimate);
 }
 
 function renderSortedVines(vines, criterion) {
@@ -1339,46 +1434,112 @@ function renderSortedVines(vines, criterion) {
     let secondaryMap = colorMap;
 
     const groups = {};
-    vines.forEach(v => {
-        const pKey = v[primaryKey] || "—";
-        const sKey = v[secondaryKey] || "—";
+    for (let i = 0; i < vines.length; i += 1) {
+        const v = vines[i];
+        const pKey = v[primaryKey] || "-";
+        const sKey = v[secondaryKey] || "-";
         if (!groups[pKey]) groups[pKey] = {};
         if (!groups[pKey][sKey]) groups[pKey][sKey] = [];
         groups[pKey][sKey].push(v);
+    }
+
+    const fragment = document.createDocumentFragment();
+    const cardsToAnimate = [];
+    const primaryKeys = Object.keys(groups).sort(function (a, b) {
+        return countGroupItems(groups[b]) - countGroupItems(groups[a]);
     });
 
-    Object.keys(groups)
-        .sort((a, b) => countGroupItems(groups[b]) - countGroupItems(groups[a]))
-        .forEach(pKey => {
-            const primaryTitle = document.createElement("div");
-            primaryTitle.className = "group-title";
-            primaryTitle.textContent = countryMap[pKey] || pKey;
-            sortedList.appendChild(primaryTitle);
+    for (let i = 0; i < primaryKeys.length; i += 1) {
+        const pKey = primaryKeys[i];
+        const primaryTitle = document.createElement("div");
+        primaryTitle.className = "group-title";
+        primaryTitle.textContent = countryMap[pKey] || pKey;
+        fragment.appendChild(primaryTitle);
 
-            Object.keys(groups[pKey])
-                .sort((a, b) => groups[pKey][b].length - groups[pKey][a].length)
-                .forEach(sKey => {
-                    const secondaryTitle = document.createElement("div");
-                    secondaryTitle.className = "group-title sub";
-                    secondaryTitle.textContent = secondaryMap[sKey] || sKey;
-                    sortedList.appendChild(secondaryTitle);
-
-                    groups[pKey][sKey].forEach(v => {
-                        const card = document.createElement("div");
-                        card.className = "wine-card sub";
-                        if (v.sparkling === "yes") card.classList.add("sparkling");
-                        const priceId = `price-${++priceIdCounter}`;
-                        card.innerHTML = createWineCardMarkup(v, priceId, true);
-                        sortedList.appendChild(card);
-                        setupPriceToggle(card);
-                        card.addEventListener("click", () => window.open("/vinery/" + v.pdf_file, "_blank"));
-                        requestAnimationFrame(() => card.classList.add("show"));
-                    });
-                });
+        const secondaryKeys = Object.keys(groups[pKey]).sort(function (a, b) {
+            return groups[pKey][b].length - groups[pKey][a].length;
         });
-}
 
-function updateSorted() {
+        for (let j = 0; j < secondaryKeys.length; j += 1) {
+            const sKey = secondaryKeys[j];
+            const secondaryTitle = document.createElement("div");
+            secondaryTitle.className = "group-title sub";
+            secondaryTitle.textContent = secondaryMap[sKey] || sKey;
+            fragment.appendChild(secondaryTitle);
+
+            const items = groups[pKey][sKey];
+            for (let k = 0; k < items.length; k += 1) {
+                const card = buildWineCard(items[k], true);
+                fragment.appendChild(card);
+                cardsToAnimate.push(card);
+            }
+        }
+    }
+
+    sortedList.appendChild(fragment);
+    animateCards(cardsToAnimate);
+}function filterVines() {
+    const countries = Array.from(filterState.country);
+    const sparklingChecked = !!filterState.sparkling;
+    const allowedRegionsRaw = allVines
+        .filter(function (v) {
+            if (sparklingChecked && v.sparkling !== "yes") return false;
+            if (countries.length && !arrayIncludes(countries, v.country)) return false;
+            return true;
+        })
+        .map(function (v) { return v.region; })
+        .filter(Boolean);
+    const allowedRegions = sortFilterValues(allowedRegionsRaw);
+
+    const currentRegions = Array.from(filterState.region);
+    const validRegions = currentRegions.filter(function (r) {
+        return arrayIncludes(allowedRegions, r);
+    });
+    if (validRegions.length !== currentRegions.length) {
+        filterState.region = new Set(validRegions);
+    }
+
+    renderFilterGroup("country", sortedFilterOptions.country, true);
+    renderFilterGroup("color", sortedFilterOptions.color, true);
+    renderFilterGroup("sugar", sortedFilterOptions.sugar, true);
+    renderFilterGroup("grape", sortedFilterOptions.grape, true);
+    renderFilterGroup("region", allowedRegions, true);
+
+    const nameFilter = (filterState.name || "").trim().toLowerCase();
+    const colors = Array.from(filterState.color);
+    const regions = Array.from(filterState.region);
+    const grapes = Array.from(filterState.grape);
+    const sugars = Array.from(filterState.sugar);
+
+    priceIdCounter = 0;
+    filteredVines = allVines.filter(function (v) {
+        if (nameFilter) {
+            const name = v.name ? v.name.toLowerCase() : "";
+            if (!name || name.indexOf(nameFilter) === -1) return false;
+        }
+        if (countries.length && !arrayIncludes(countries, v.country)) return false;
+        if (colors.length && !arrayIncludes(colors, v.color)) return false;
+        if (regions.length && !arrayIncludes(regions, v.region)) return false;
+        if (grapes.length) {
+            const vineGrapes = Array.isArray(v.grape) ? v.grape : [];
+            let hasMatch = false;
+            for (let i = 0; i < vineGrapes.length; i += 1) {
+                if (arrayIncludes(grapes, String(vineGrapes[i]))) {
+                    hasMatch = true;
+                    break;
+                }
+            }
+            if (!hasMatch) return false;
+        }
+        if (sugars.length && !arrayIncludes(sugars, v.sugar)) return false;
+        if (sparklingChecked && v.sparkling !== "yes") return false;
+        return true;
+    });
+
+    renderVines(filteredVines);
+    updateSorted();
+    updateColorHighlight();
+}function updateSorted() {
     if (!filteredVines.length) {
         sortedList.style.display = "none";
         list.style.display = "block";
@@ -1475,3 +1636,15 @@ applyPresetFilters();
 </main>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+

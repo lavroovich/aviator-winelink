@@ -237,27 +237,34 @@
       // Универсально: pointerup работает и для мыши, и для тачей
       logo.addEventListener('pointerup', registerTap);
 
-      async function fetchStatus(){
+            async function fetchStatus(){
         try {
           const res = await fetch('/status.json', { cache: 'no-store' });
           const data = await res.json();
-          const ruColor = { red: 'Кр.', white: 'Бел.', pink: 'Роз.' };
+          const details = data.details || {};
+          const ruColor = { red: 'кр.', white: 'бел.', pink: 'роз.' };
           const envHuman = data.env === 'vercel' ? 'production (vercel)' : 'local';
           const dbMode = data.db_mode === 'ro' ? 'read-only' : 'read-write';
-          const colors = data.details.colors || {};
+          const colors = details.colors || {};
+          const valueOr = (val, fallback) => (val === undefined || val === null ? fallback : val);
           const colorStr = Object.keys(colors).length
             ? Object.entries(colors)
-                .map(([k,v]) => `${ruColor[k] || k}: ${v}`)
+                .map(([k, v]) => `${ruColor[k] || k}: ${v}`)
                 .join(', ')
             : '-';
-          const sugars = (data.details.sugars_present || []).join(', ');
-          const geo = `стран: ${data.details.countries_total ?? '-'}, регионов: ${data.details.regions_total ?? '-'}`;
-          const vines = `${data.details.vines_total ?? '-'} (игристых: ${data.details.sparkling_yes ?? 0})`;
-          const assetExt = (data.details.pdfs_extension || '.pdf').replace('.', '').toUpperCase();
-          const assetDir = data.details.pdfs_dir_name || (assetExt === 'WEBP' ? 'webp' : 'pdfs');
-          const pdfMissing = data.details.pdfs_missing || [];
-          const pdfExtra = data.details.pdfs_extra || [];
-          const filesSummary = `в папке ${assetDir}: ${data.details.pdfs_in_dir ?? '-'}, недостаёт: ${pdfMissing.length}, лишние: ${pdfExtra.length}`;
+          const sugars = (details.sugars_present || []).join(', ');
+          const countriesDisplay = valueOr(details.countries_total, '-');
+          const regionsDisplay = valueOr(details.regions_total, '-');
+          const vinesTotal = valueOr(details.vines_total, '-');
+          const sparklingCount = valueOr(details.sparkling_yes, 0);
+          const geo = `стран: ${countriesDisplay}, регионов: ${regionsDisplay}`;
+          const vines = `${vinesTotal} (игристых: ${sparklingCount})`;
+          const assetExt = (details.pdfs_extension || '.pdf').replace('.', '').toUpperCase();
+          const assetDir = details.pdfs_dir_name || (assetExt === 'WEBP' ? 'webp' : 'pdfs');
+          const pdfMissing = details.pdfs_missing || [];
+          const pdfExtra = details.pdfs_extra || [];
+          const pdfsInDir = valueOr(details.pdfs_in_dir, '-');
+          const filesSummary = `В папке ${assetDir}: ${pdfsInDir}, недостаёт: ${pdfMissing.length}, лишние: ${pdfExtra.length}`;
 
           document.getElementById('st-env').textContent = `${envHuman}, DB ${dbMode}`;
           document.getElementById('st-db').innerHTML = data.db_connected
@@ -266,7 +273,7 @@
           document.getElementById('st-vines').textContent = vines;
           document.getElementById('st-colors').textContent = colorStr;
           document.getElementById('st-geo').textContent = geo;
-          document.getElementById('st-grapes').textContent = `${data.details.grapes_total ?? '-'} сортов`;
+          document.getElementById('st-grapes').textContent = `${valueOr(details.grapes_total, '-')} сортов`;
           document.getElementById('st-sugars').textContent = sugars || '-';
           const labelEl = document.getElementById('st-pdfs-label');
           if (labelEl) labelEl.textContent = assetExt;
@@ -284,9 +291,17 @@
         } catch (e) {
           document.getElementById('st-db').innerHTML = '<span class="err">error</span>';
         }
+      }} else {
+            pdfEl.removeAttribute('title');
+          }
+          document.getElementById('st-ver').textContent = data.version || '-';
+        } catch (e) {
+          document.getElementById('st-db').innerHTML = '<span class="err">error</span>';
+        }
       }
     })();
   </script>
 </body>
 </html>
+
 

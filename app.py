@@ -205,7 +205,7 @@ def status_json():
         "env": env,
         "db_mode": db_mode,
         "db_connected": ok,
-        "version": "2.1",
+        "version": "4.0 release",
         "details": details,
     }
     return jsonify(payload)

@@ -263,10 +263,9 @@ def bottle_image(filename):
 
     return send_from_directory(bottles_dir, filename, max_age=60 * 60 * 24 * 7)
 
-# ----- Инициализация -----
-if not os.getenv("VERCEL"):
-    with app.app_context():
+
+with app.app_context():
         database.create_all()
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 4400)))
+    app.run(host="0.0.0.0", port=8080)

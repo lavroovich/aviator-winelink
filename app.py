@@ -85,7 +85,6 @@ def _asset_path_info(filename: str):
 
 @app.route("/winery/")
 def catalog():
-
     applyed_filters=request.args.get("applyed_filters", "")
     if applyed_filters:
         applyed_filters = json.loads(applyed_filters)
@@ -123,92 +122,6 @@ def catalog():
         })
 
     return render_template("catalog.html", vines=vines_list, applyed_filters=applyed_filters)
-
-@app.route("/status.json")
-def status_json():
-    # ENV and DB mode
-    env = "vercel" if os.getenv("VERCEL") else "local"
-    db_mode = "ro" if os.getenv("VERCEL") else "rw"
-
-    # Try DB connectivity and collect stats safely
-    ok = True
-    details = {}
-    try:
-        vines = Vine.query.all()
-        details["vines_total"] = len(vines)
-
-        # counts and uniques
-        colors = {}
-        sparkling_yes = 0
-        countries = set()
-        regions = set()
-        grapes_set = set()
-        sugars_set = set()
-        for v in vines:
-            colors[v.color] = colors.get(v.color, 0) + 1
-            if getattr(v, "sparkling", "no") == "yes":
-                sparkling_yes += 1
-            if v.country:
-                countries.add(v.country)
-            if v.region:
-                regions.add(v.region)
-            if v.sugar:
-                sugars_set.add(v.sugar)
-            # v.grape is JSON array or string
-            try:
-                gs = json.loads(v.grape) if v.grape else []
-                if isinstance(gs, list):
-                    for g in gs:
-                        grapes_set.add(str(g))
-                elif isinstance(gs, str) and gs:
-                    grapes_set.add(gs)
-            except Exception:
-                if v.grape:
-                    grapes_set.add(str(v.grape))
-
-        details["colors"] = colors
-        details["sparkling_yes"] = sparkling_yes
-        details["countries_total"] = len(countries)
-        details["regions_total"] = len(regions)
-        details["grapes_total"] = len(grapes_set)
-        details["sugars_present"] = sorted(list(sugars_set))
-
-        # filesystem checks for PDFs
-        try:
-            asset_ext = _infer_active_asset_extension(vines)
-            asset_dir = os.path.join(app.root_path, _asset_dir_for_extension(asset_ext))
-
-            if os.path.isdir(asset_dir):
-                fs_files = {f for f in os.listdir(asset_dir) if f.lower().endswith(asset_ext)}
-            else:
-                fs_files = set()
-
-            db_files = {
-                v.pdf_file for v in vines
-                if v.pdf_file and v.pdf_file.lower().endswith(asset_ext)
-            }
-            missing = sorted(db_files - fs_files)
-            extra = sorted(fs_files - db_files)
-
-            details["pdfs_extension"] = asset_ext
-            details["pdfs_dir_name"] = os.path.basename(asset_dir)
-            details["pdfs_in_dir"] = len(fs_files)
-            details["pdfs_missing"] = missing
-            details["pdfs_extra"] = extra
-        except Exception:
-            # ignore FS errors
-            pass
-    except Exception:
-        ok = False
-
-    payload = {
-        "env": env,
-        "db_mode": db_mode,
-        "db_connected": ok,
-        "version": "4.0 release",
-        "details": details,
-    }
-    return jsonify(payload)
 
 @app.route("/vinery/qr/<filename>")
 def pdf_qr(filename):

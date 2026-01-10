@@ -867,6 +867,12 @@ body.filters-open {
                         Игристое
                     </label>
                 </div>
+                <div class="filter-box filter-box--checkbox">
+                    <label>
+                        <input type="checkbox" id="filter-bokal">
+                            По бокалам
+                    </label>
+                </div>  
             </div>
             <div class="filters__actions">
                 <button type="button" class="filters__clear" id="filters-clear">
@@ -1124,9 +1130,9 @@ const sugarMap = { dry: "Сухое", semidry: "Полусухое", brut: "Бр
 const allVines = {{ vines|tojson }};
 const presetFilters = {{ applyed_filters|tojson }};
 
-// нормализуем sparkling
 allVines.forEach(v => {
     if (!v.sparkling) v.sparkling = "no";
+    if (!v.bokal) v.bokal = "no";
 });
 
 const list = document.querySelector(".wine-list");
@@ -1228,12 +1234,14 @@ const filterContainers = {
 const filterState = {
     name: "",
     sparkling: false,
+    bokal: false,
     country: new Set(),
     color: new Set(),
     region: new Set(),
     grape: new Set(),
     sugar: new Set()
 };
+
 
 const filterMaps = {
     country: countryMap,
@@ -1665,6 +1673,9 @@ function renderSortedVines(vines, criterion) {
     const allowedRegionsRaw = allVines
         .filter(function (v) {
             if (sparklingChecked && v.sparkling !== "yes") return false;
+            if (filterState.bokal && v.bokal !== "yes") {
+                return false;
+            }
             if (countries.length && !arrayIncludes(countries, v.country)) return false;
             return true;
         })
@@ -1714,6 +1725,7 @@ function renderSortedVines(vines, criterion) {
         }
         if (sugars.length && !arrayIncludes(sugars, v.sugar)) return false;
         if (sparklingChecked && v.sparkling !== "yes") return false;
+        if (filterState.bokal && v.bokal !== "yes") return false;
         return true;
     });
 
@@ -1804,6 +1816,8 @@ if (nameInputEl) {
 }
 
 const sparklingInputEl = document.querySelector("#filter-sparkling");
+const bokalInputEl = document.getElementById("filter-bokal");
+
 if (sparklingInputEl) {
     filterState.sparkling = sparklingInputEl.checked;
     sparklingInputEl.addEventListener("change", () => {
@@ -1811,6 +1825,13 @@ if (sparklingInputEl) {
         filterVines();
     });
 }
+if (bokalInputEl) {
+    bokalInputEl.addEventListener("change", () => {
+        filterState.bokal = bokalInputEl.checked;
+        filterVines();
+    });
+}
+
 
 applyPresetFilters();
 

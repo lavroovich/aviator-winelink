@@ -26,6 +26,7 @@ class Vine(database.Model):
     name = database.Column(database.String(100), nullable=False)
     color = database.Column(database.String(50), nullable=False)
     sparkling = database.Column(database.String(50), nullable=False, default="no")
+    bokal = database.Column(database.String(50), nullable=False, default="no")
     country = database.Column(database.String(100), nullable=False)
     region = database.Column(database.String(100), nullable=True)
     grape = database.Column(database.String(200), nullable=True)  # JSON
@@ -76,6 +77,13 @@ def _asset_path_info(filename: str):
     safe_name = os.path.basename(filename)
     _, ext = os.path.splitext(safe_name)
     ext = ext.lower()
+    
+    # Исправляем неправильное расширение .web на .webp
+    if ext == ".web":
+        ext = ".webp"
+        base_name = os.path.splitext(safe_name)[0]
+        safe_name = f"{base_name}.webp"
+    
     if ext == "":
         ext = ".webp"
         safe_name = f"{safe_name}.webp"
@@ -117,6 +125,7 @@ def catalog():
             "sugar": v.sugar,
             "pdf_file": v.pdf_file,
             "sparkling": v.sparkling,
+            "bokal": v.bokal,
             "price": v.price,
             "image_url": image_url
         })

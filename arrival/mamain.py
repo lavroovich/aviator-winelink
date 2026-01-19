@@ -2,7 +2,7 @@ import os
 import fitz  # PyMuPDF
 from PIL import Image
 
-folder = r"c:\Users\ivanb\Desktop\papka\code\aviator-winelink\new arrival"
+folder = r"c:\Users\ivanb\Desktop\papka\code\aviator-winelink\arrival"
 
 for file in os.listdir(folder):
     if file.lower().endswith(".pdf"):

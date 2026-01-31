@@ -6,7 +6,17 @@
 <title>Винная Карта — Авиатор</title>
 <link href="https://fonts.googleapis.com/css?family=Alegreya+SC:500,700&display=swap" rel="stylesheet">
 <style>
-body { margin:0; padding:0; min-height:100vh; font-family:'Alegreya SC', sans-serif; background:#faf7f0; color:#333; display:flex; flex-direction:column; }
+:root {
+    --bg-sand: #faf7f0;
+    --bg-ice: #fff6f2;
+    --ink: #2f2621;
+    --accent: #7f1212;
+    --accent-strong: #5a0505;
+    --accent-soft: #ffb97d;
+    --line: rgba(111, 10, 10, 0.18);
+    --card: #ffffff;
+}
+body { margin:0; padding:0; min-height:100vh; font-family:'Alegreya SC', sans-serif; background:radial-gradient(circle at 18% 12%, rgba(127,18,18,0.08) 0%, transparent 36%), linear-gradient(180deg, var(--bg-sand) 0%, #fffaf4 55%, #f8f1e8 100%); color:var(--ink); display:flex; flex-direction:column; }
 header { width:100%; display:flex; justify-content:center; padding:24px 18px 12px; background:transparent; border-bottom:none; position:sticky; top:0; z-index:20; }
 .logo-container {
     display:flex;
@@ -22,194 +32,38 @@ header { width:100%; display:flex; justify-content:center; padding:24px 18px 12p
 }
 .logo-container img { display:block; max-width:150px; height:auto; }
 main { flex:1; padding:15px; }
-h1 { font-size:1.6rem; text-align:center; margin-bottom:15px; background: #6f0a0a; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-
-.catalog-error-overlay {
-    position:fixed;
-    inset:0;
-    display:none;
-    align-items:center;
-    justify-content:center;
-    padding:40px 20px;
-    background:radial-gradient(circle at 18% 18%, rgba(255,215,200,0.22) 0%, rgba(255,215,200,0) 52%), linear-gradient(135deg, #5a0505 0%, #320101 100%);
-    color:#fff3e8;
-    z-index:120;
-}
-.catalog-error-overlay.is-visible {
-    display:flex;
-}
-.catalog-error-content {
-    width:min(560px, 100%);
-    padding:42px 48px;
-    border-radius:32px;
-    border:1px solid rgba(255,232,218,0.28);
-    background:rgba(20,4,4,0.55);
-    box-shadow:0 28px 50px rgba(0,0,0,0.45);
-    display:flex;
-    flex-direction:column;
-    gap:20px;
-    text-align:left;
-}
-.catalog-error-face {
-    font-size:4.5rem;
-    line-height:1;
-    opacity:0.85;
-}
-.catalog-error-title {
-    margin:0;
-    font-size:1.7rem;
-    font-weight:700;
-    letter-spacing:0.01em;
-}
-.catalog-error-subtitle {
-    margin:0;
-    font-size:1rem;
-    color:rgba(255,232,218,0.85);
-}
-.catalog-error-progress {
-    display:flex;
-    flex-direction:column;
-    gap:10px;
-    margin-top:6px;
-}
-.catalog-error-progress-label {
-    font-size:0.95rem;
-    font-weight:600;
-}
-.catalog-error-progress-bar {
-    position:relative;
-    height:6px;
-    border-radius:999px;
-    background:rgba(255,232,218,0.16);
-    overflow:hidden;
-}
-.catalog-error-progress-fill {
-    height:100%;
-    width:0%;
-    border-radius:999px;
-    background:linear-gradient(90deg, #ffb97d 0%, #ffd4b2 100%);
-    transition:width 0.5s ease;
-}
-.catalog-error-details {
-    display:flex;
-    flex-direction:column;
-    gap:8px;
-    padding:14px 18px;
-    border-radius:18px;
-    background:rgba(255,232,218,0.12);
-}
-.catalog-error-details-label {
-    text-transform:uppercase;
-    font-size:0.7rem;
-    letter-spacing:0.18em;
-    color:rgba(255,232,218,0.7);
-}
-.catalog-error-details-message {
-    font-size:1rem;
-    font-weight:600;
-    margin:0;
-    word-break:break-word;
-}
-.catalog-error-details-stack {
-    margin:0;
-    padding:12px 14px;
-    border-radius:12px;
-    background:rgba(21,4,4,0.55);
-    color:rgba(255,232,218,0.8);
-    font-family:'Courier New', monospace;
-    font-size:0.78rem;
-    max-height:160px;
-    overflow:auto;
-    white-space:pre-wrap;
-}
-.catalog-error-details-stack:empty {
-    display:none;
-}
-.catalog-error-actions {
-    display:flex;
-    justify-content:flex-start;
-    margin-top:6px;
-}
-.catalog-error-home {
-    border:none;
-    border-radius:999px;
-    padding:12px 32px;
-    font-size:0.95rem;
-    font-weight:700;
-    letter-spacing:0.03em;
-    background:#ffb97d;
-    color:#4a0505;
-    cursor:pointer;
-    transition:transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-    box-shadow:0 16px 30px rgba(0,0,0,0.25);
-}
-.catalog-error-home:hover {
-    background:#ffd4b2;
-    transform:translateY(-2px);
-    box-shadow:0 20px 40px rgba(0,0,0,0.3);
-}
-.catalog-error-home:focus-visible {
-    outline:2px solid rgba(255,232,218,0.9);
-    outline-offset:3px;
-}
-.catalog-error-home:active {
-    transform:translateY(0);
-}
-body.catalog-error-active {
-    overflow:hidden;
-}
-@media (max-width:600px) {
-    .catalog-error-content {
-        padding:32px 28px;
-        border-radius:24px;
-    }
-    .catalog-error-face {
-        font-size:3.2rem;
-    }
-    .catalog-error-title {
-        font-size:1.4rem;
-    }
-}
-@media (prefers-reduced-motion:reduce) {
-    .catalog-error-progress-fill {
-        transition:none;
-    }
-    .catalog-error-home {
-        transition:none;
-    }
-}
+h1 { font-size:1.6rem; text-align:center; margin-bottom:15px; background: linear-gradient(135deg, #7f1212 0%, #a72a2a 55%, #5a0505 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
 
 .filters-toggle-row {
     display:flex;
     justify-content:center;
-    margin:0 0 16px;
+    margin:4px 0 18px;
 }
 .filters-toggle {
     display:inline-flex;
     align-items:center;
-    gap:8px;
-    padding:10px 20px;
-    border-radius:999px;
-    border:1px solid rgba(111,10,10,0.25);
-    background:#ffffff;
-    color:#6f0a0a;
+    gap:10px;
+    padding:12px 22px;
+    border-radius:14px;
+    border:1px solid var(--line);
+    background:linear-gradient(120deg, var(--accent) 0%, #b63d3d 55%, var(--accent-strong) 100%);
+    color:#f7fffc;
     font-size:0.95rem;
-    font-weight:600;
+    font-weight:700;
     cursor:pointer;
-    letter-spacing:0.02em;
-    box-shadow:0 8px 20px rgba(111,10,10,0.12);
-    transition:transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, color 0.2s ease;
+    letter-spacing:0.03em;
+    box-shadow:0 14px 28px rgba(15, 143, 115, 0.18);
+    transition:transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 .filters-toggle:hover {
-    transform:translateY(-1px);
-    box-shadow:0 12px 30px rgba(111,10,10,0.16);
+    transform:translateY(-2px);
+    box-shadow:0 16px 36px rgba(127, 18, 18, 0.26);
 }
 .filters-toggle:active {
     transform:translateY(0);
 }
 .filters-toggle.is-active {
-    background:#6f0a0a;
-    color:#ffffff;
+    background:linear-gradient(120deg, #5a0505 0%, #7f1212 60%, #681010 100%);
 }
 .filters-popover {
     position:fixed;
@@ -228,8 +82,8 @@ body.catalog-error-active {
 .filters-popover__backdrop {
     position:absolute;
     inset:0;
-    background:rgba(15,13,10,0.35);
-    backdrop-filter:blur(2px);
+    background:rgba(12, 16, 14, 0.35);
+    backdrop-filter:blur(5px);
 }
 .filters-popover__panel {
     position:relative;
@@ -237,6 +91,11 @@ body.catalog-error-active {
     z-index:1;
     max-height:calc(100vh - 120px);
     overflow:auto;
+    padding:12px;
+    border-radius:22px;
+    border:1px solid rgba(127,18,18,0.18);
+    background:radial-gradient(circle at 18% 12%, rgba(255,230,221,0.55), transparent 48%), linear-gradient(180deg, rgba(255,255,255,0.82) 0%, rgba(255,248,244,0.95) 70%, rgba(255,245,240,0.9) 100%);
+    box-shadow:0 20px 46px rgba(51,18,18,0.18), inset 0 1px 0 rgba(255,255,255,0.35);
 }
 body.filters-open {
     overflow:hidden;
@@ -264,37 +123,37 @@ body.filters-open {
     justify-content:center;
     gap:8px;
     padding:12px 28px;
-    background:linear-gradient(135deg, #7f1212 0%, #6f0a0a 55%, #590808 100%);
+    background:linear-gradient(135deg, #7f1212 0%, #b63d3d 55%, #5a0505 100%);
     color:#ffffff;
     font-size:0.92rem;
     font-weight:700;
     border-radius:16px;
     cursor:pointer;
-    box-shadow:0 12px 24px rgba(111,10,10,0.18);
+    box-shadow:0 12px 24px rgba(127,18,18,0.18);
     transition:transform 0.25s ease, box-shadow 0.25s ease;
 }
 .filters__close:hover {
     transform:translateY(-2px);
-    box-shadow:0 18px 34px rgba(111,10,10,0.22);
+    box-shadow:0 18px 34px rgba(127,18,18,0.24);
 }
 .filters__close:active {
     transform:translateY(0);
-    box-shadow:0 10px 20px rgba(111,10,10,0.15);
+    box-shadow:0 10px 20px rgba(127,18,18,0.15);
 }
 .filters__clear {
-    border:1px solid rgba(111,10,10,0.22);
-    background:rgba(255,255,255,0.9);
-    color:#6f0a0a;
+    border:1px solid var(--line);
+    background:linear-gradient(180deg, #fffaf4 0%, #fff4ed 100%);
+    color:var(--accent-strong);
     padding:10px 20px;
     border-radius:14px;
-    font-size:0.88rem;
-    font-weight:600;
+    font-size:0.9rem;
+    font-weight:700;
     cursor:pointer;
     transition:color 0.2s ease, background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
 }
 .filters__clear:hover {
-    background:rgba(111,10,10,0.08);
-    border-color:rgba(111,10,10,0.35);
+    background:#fff1e8;
+    border-color:rgba(127,18,18,0.35);
     transform:translateY(-1px);
 }
 .filters__clear:active {
@@ -309,9 +168,9 @@ body.filters-open {
     padding:22px 24px 24px;
     margin-bottom:20px;
     border-radius:20px;
-    border:1px solid rgba(111,10,10,0.12);
-    background:linear-gradient(140deg, rgba(255,244,235,0.95) 0%, rgba(255,255,255,0.98) 55%, #ffffff 100%);
-    box-shadow:0 12px 30px rgba(111,10,10,0.08);
+    border:1px solid var(--line);
+    background:linear-gradient(140deg, rgba(255,244,235,0.96) 0%, rgba(255,255,255,0.98) 52%, #fff5ef 100%);
+    box-shadow:0 12px 30px rgba(127,18,18,0.08);
     overflow:hidden;
     z-index:0;
 }
@@ -319,7 +178,7 @@ body.filters-open {
     content:'';
     position:absolute;
     inset:0;
-    background:radial-gradient(circle at 85% 15%, rgba(111,10,10,0.08), transparent 55%);
+    background:radial-gradient(circle at 82% 18%, rgba(127, 18, 18, 0.08), transparent 55%);
     pointer-events:none;
     z-index:0;
 }
@@ -337,15 +196,15 @@ body.filters-open {
 }
 .filters__title {
     margin:0;
-    font-size:1.15rem;
+    font-size:1.2rem;
     font-weight:700;
-    color:#6f0a0a;
+    color:var(--accent-strong);
     letter-spacing:0.02em;
 }
 .filters__hint {
     margin:4px 0 0;
-    font-size:0.78rem;
-    color:rgba(51,51,51,0.72);
+    font-size:0.8rem;
+    color:rgba(47,38,33,0.78);
     max-width:28rem;
     line-height:1.4;
 }
@@ -360,15 +219,15 @@ body.filters-open {
     gap:6px;
     padding:12px 14px;
     border-radius:14px;
-    background:rgba(255,255,255,0.9);
-    border:1px solid rgba(111,10,10,0.12);
-    box-shadow:0 2px 6px rgba(111,10,10,0.06);
+    background:rgba(255,255,255,0.94);
+    border:1px solid rgba(127, 18, 18, 0.12);
+    box-shadow:0 2px 10px rgba(127,18,18,0.06);
     transition:border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease, background 0.25s ease;
 }
 .filter-box:hover,
 .filter-box:focus-within {
-    border-color:rgba(111,10,10,0.35);
-    box-shadow:0 6px 16px rgba(111,10,10,0.1);
+    border-color:rgba(127,18,18,0.35);
+    box-shadow:0 10px 18px rgba(127,18,18,0.1);
     transform:translateY(-2px);
     background:#ffffff;
 }
@@ -377,28 +236,28 @@ body.filters-open {
     text-transform:uppercase;
     letter-spacing:0.06em;
     font-weight:700;
-    color:#6f0a0a;
+    color:var(--accent-strong);
     display:flex;
     flex-direction:column;
     gap:6px;
 }
 .filter-box select,
 .filter-box input[type="text"] {
-    padding:8px 34px 8px 12px;
-    font-size:0.92rem;
-    border-radius:10px;
-    border:1px solid rgba(111,10,10,0.18);
+    padding:10px 36px 10px 12px;
+    font-size:0.95rem;
+    border-radius:11px;
+    border:1px solid rgba(127,18,18,0.24);
     background:#ffffff;
     font-family:inherit;
-    color:#2f2f2f;
+    color:var(--ink);
     transition:border-color 0.2s ease, box-shadow 0.2s ease;
-    box-shadow:inset 0 1px 2px rgba(111,10,10,0.08);
+    box-shadow:inset 0 1px 2px rgba(127,18,18,0.08);
     appearance:none;
     width:100%;
     box-sizing:border-box;
 }
 .filter-box select:not([multiple]) {
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='10' viewBox='0 0 14 10'%3E%3Cpath fill='none' stroke='%236f0a0a' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round' d='M1 2.5 7 7.5 13 2.5'/%3E%3C/svg%3E");
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='10' viewBox='0 0 14 10'%3E%3Cpath fill='none' stroke='%237f1212' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round' d='M1 2.5 7 7.5 13 2.5'/%3E%3C/svg%3E");
     background-repeat:no-repeat;
     background-position:right 12px center;
     background-size:14px 10px;
@@ -406,8 +265,8 @@ body.filters-open {
 }
 .filter-box select:focus,
 .filter-box input[type="text"]:focus {
-    border-color:#6f0a0a;
-    box-shadow:0 0 0 3px rgba(111,10,10,0.12);
+    border-color:var(--accent-strong);
+    box-shadow:0 0 0 3px rgba(127,18,18,0.12);
     outline:none;
 }
 .filter-box select[multiple] {
@@ -434,40 +293,41 @@ body.filters-open {
     width:6px;
 }
 .filter-chip-list--scrollable::-webkit-scrollbar-thumb {
-    background:rgba(111,10,10,0.35);
+    background:rgba(127,18,18,0.35);
     border-radius:999px;
 }
 .filter-chip {
     display:inline-flex;
     align-items:center;
     justify-content:center;
-    padding:6px 14px;
+    padding:8px 14px;
     font-size:0.9rem;
-    font-weight:600;
+    font-weight:700;
     border-radius:999px;
-    border:1px solid rgba(111,10,10,0.24);
-    background:#ffffff;
-    color:#6f0a0a;
+    border:1px solid rgba(127,18,18,0.28);
+    background:linear-gradient(180deg, #ffffff 0%, #f3fbf7 100%);
+    color:var(--accent-strong);
     cursor:pointer;
     user-select:none;
-    transition:background 0.2s ease, color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    transition:background 0.2s ease, color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 .filter-chip:not(.is-selected):hover {
     transform:translateY(-1px);
-    box-shadow:0 6px 16px rgba(111,10,10,0.12);
+    box-shadow:0 6px 16px rgba(127,18,18,0.12);
+    border-color:rgba(127,18,18,0.4);
 }
 .filter-chip.is-selected {
-    background:#6f0a0a;
+    background:linear-gradient(135deg, var(--accent) 0%, #b63d3d 60%, var(--accent-strong) 100%);
     color:#ffffff;
-    box-shadow:0 10px 24px rgba(111,10,10,0.18);
+    box-shadow:0 10px 24px rgba(127,18,18,0.18);
 }
 .filter-chip:focus-visible {
-    outline:2px solid rgba(111,10,10,0.45);
+    outline:2px solid rgba(127,18,18,0.45);
     outline-offset:2px;
 }
 .filter-chip-empty {
     font-size:0.85rem;
-    color:rgba(51,51,51,0.6);
+    color:rgba(47,38,33,0.6);
 }
 
 .filter-box--wide {
@@ -482,16 +342,16 @@ body.filters-open {
     gap:10px;
     text-transform:none;
     letter-spacing:0;
-    font-size:0.9rem;
-    font-weight:600;
-    color:#333;
+    font-size:0.92rem;
+    font-weight:700;
+    color:var(--ink);
 }
 .filter-box--checkbox input[type="checkbox"] {
     margin:0;
     width:18px;
     height:18px;
     cursor:pointer;
-    accent-color:#6f0a0a;
+    accent-color:var(--accent);
 }
 .filter-box.red-highlight {
     background:rgba(255,225,225,0.92);
@@ -504,6 +364,102 @@ body.filters-open {
 .filter-box.pink-highlight {
     background:rgba(255,220,235,0.92);
     border-color:rgba(182,101,133,0.55);
+}
+
+.dev-strip {
+    display:none;
+    flex-direction:column;
+    align-items:center;
+    gap:10px;
+    margin:0 auto 18px;
+    padding:14px 16px;
+    width:min(520px, 100%);
+    border-radius:16px;
+    background:linear-gradient(120deg, rgba(127,18,18,0.08) 0%, rgba(167,42,42,0.12) 45%, rgba(90,5,5,0.12) 100%);
+    border:1px dashed rgba(127,18,18,0.35);
+    box-shadow:0 10px 24px rgba(127,18,18,0.08);
+}
+body.dev-mode .dev-strip {
+    display:flex;
+}
+.dev-strip__label {
+    margin:0;
+    font-weight:800;
+    letter-spacing:0.05em;
+    text-transform:uppercase;
+    color:var(--accent-strong);
+    font-size:0.82rem;
+}
+.dev-strip__button {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    padding:10px 18px;
+    border-radius:14px;
+    border:1px solid var(--line);
+    background:linear-gradient(135deg, #7f1212 0%, #b63d3d 55%, #5a0505 100%);
+    color:#fff;
+    font-weight:700;
+    font-size:0.95rem;
+    text-decoration:none;
+    box-shadow:0 12px 24px rgba(127,18,18,0.16);
+    transition:transform 0.2s ease, box-shadow 0.2s ease;
+}
+.dev-strip__button:hover {
+    transform:translateY(-1px);
+    box-shadow:0 16px 30px rgba(127,18,18,0.2);
+}
+.dev-strip__note {
+    margin:0;
+    color:rgba(47,38,33,0.7);
+    font-size:0.85rem;
+}
+.dev-actions {
+    display:none;
+    margin-top:10px;
+    gap:10px;
+}
+body.dev-mode .dev-actions {
+    display:flex;
+}
+.dev-action-button {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    padding:8px 12px;
+    border-radius:10px;
+    border:1px solid var(--line);
+    background:linear-gradient(180deg, #ffffff 0%, #fff3ee 100%);
+    color:var(--accent-strong);
+    font-weight:700;
+    font-size:0.88rem;
+    text-decoration:none;
+    transition:transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+.dev-action-button:hover {
+    transform:translateY(-1px);
+    box-shadow:0 8px 18px rgba(127,18,18,0.18);
+    border-color:rgba(127,18,18,0.35);
+}
+.dev-pill {
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:6px 10px;
+    border-radius:10px;
+    background:rgba(127,18,18,0.12);
+    color:var(--accent-strong);
+    font-weight:700;
+    font-size:0.78rem;
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+}
+.dev-pill::before {
+    content:'●';
+    font-size:0.8rem;
+    color:#b63d3d;
 }
 
 @media (max-width:900px) {
@@ -527,13 +483,6 @@ body.filters-open {
     .filters__close,
     .filters__clear {
         width:100%;
-    }
-    .danger-zone {
-        margin-top:24px;
-    }
-    .danger-zone__trigger {
-        width:100%;
-        text-align:center;
     }
     .filters::after {
         background:radial-gradient(circle at 90% 10%, rgba(111,10,10,0.1), transparent 45%);
@@ -739,78 +688,9 @@ body.filters-open {
     font-size:0.8rem;
 }
 .bold { font-weight:bold; }
-.danger-zone {
-    margin-top:32px;
-    padding:20px 24px;
-    border-radius:18px;
-    border:1px solid rgba(127,18,18,0.28);
-    background:linear-gradient(145deg, rgba(255,235,235,0.95) 0%, rgba(255,248,248,0.98) 55%, #ffffff 100%);
-    box-shadow:0 12px 26px rgba(127,18,18,0.12);
-    color:#4f0707;
-    display:flex;
-    flex-direction:column;
-    gap:10px;
-}
-.danger-zone__title {
-    margin:0;
-    font-size:0.82rem;
-    letter-spacing:0.08em;
-    text-transform:uppercase;
-    font-weight:700;
-    color:#a10606;
-}
-.danger-zone__hint {
-    margin:0;
-    font-size:0.86rem;
-    color:rgba(79,7,7,0.85);
-}
-.danger-zone__trigger {
-    align-self:flex-start;
-    border:none;
-    padding:12px 26px;
-    background:linear-gradient(135deg, #ff5e5e 0%, #e41212 55%, #a70707 100%);
-    color:#fff;
-    font-weight:700;
-    font-size:0.95rem;
-    border-radius:16px;
-    cursor:pointer;
-    box-shadow:0 14px 30px rgba(164,18,18,0.22);
-    text-transform:lowercase;
-    letter-spacing:0.04em;
-    transition:transform 0.22s ease, box-shadow 0.22s ease;
-}
-.danger-zone__trigger:hover {
-    transform:translateY(-2px);
-    box-shadow:0 18px 36px rgba(164,18,18,0.28);
-}
-.danger-zone__trigger:active {
-    transform:translateY(0);
-    box-shadow:0 12px 24px rgba(164,18,18,0.18);
-}
 </style>
 </head>
 <body>
-<div class="catalog-error-overlay" id="catalog-error-overlay" aria-hidden="true">
-    <div class="catalog-error-content" role="alert" aria-live="assertive">
-        <div class="catalog-error-face">:(</div>
-        <h2 class="catalog-error-title">Винной карте нужна перезагрузка.</h2>
-        <p class="catalog-error-subtitle">Мы собираем сведения об ошибке и скоро попробуем восстановиться.</p>
-        <div class="catalog-error-progress">
-            <div class="catalog-error-progress-label" id="catalog-error-progress-label">0% готово</div>
-            <div class="catalog-error-progress-bar">
-                <div class="catalog-error-progress-fill" id="catalog-error-progress-fill"></div>
-            </div>
-        </div>
-        <div class="catalog-error-details">
-            <span class="catalog-error-details-label">Ошибка</span>
-            <p class="catalog-error-details-message" id="catalog-error-message">Неизвестная ошибка</p>
-            <pre class="catalog-error-details-stack" id="catalog-error-stack"></pre>
-        </div>
-        <div class="catalog-error-actions">
-            <button type="button" class="catalog-error-home" id="catalog-error-home">На главную</button>
-        </div>
-    </div>
-</div>
 <header>
     <div class="logo-container">
         <img src="{{ url_for('static', filename='logo.jpg') }}" alt="VineLink">
@@ -823,6 +703,13 @@ body.filters-open {
     <button type="button" class="filters-toggle" id="filters-toggle" aria-haspopup="dialog" aria-expanded="false">
         Показать фильтры
     </button>
+</div>
+<div class="dev-strip" id="dev-strip" aria-live="polite">
+    <div class="dev-pill">режим разработчика</div>
+    <a class="dev-strip__button" id="dev-add-button" href="/winery/manage" target="_blank" rel="noopener">
+        Добавить вино
+    </a>
+    <p class="dev-strip__note">Редактирование карточек доступно в списке ниже.</p>
 </div>
 
 <div class="filters-popover" id="filters-popover" aria-hidden="true">
@@ -895,212 +782,8 @@ body.filters-open {
 <p>версия сайта: 4.0 release</p>
 <p>winelink сделан с душой <span class="bold">Lavroovich-ем</span></p>
 
-<div class="danger-zone" role="complementary">
-    <p class="danger-zone__title">danger zone</p>
-    <p class="danger-zone__hint">кнопки для самых смелых</p>
-    <button type="button" class="danger-zone__trigger" id="danger-self-crash">
-        самокраш
-    </button>
-</div>
-
 <script>
 // словари
-(function setupCatalogBsod() {
-    const overlay = document.getElementById("catalog-error-overlay");
-    if (!overlay) return;
-
-    const messageEl = document.getElementById("catalog-error-message");
-    const stackEl = document.getElementById("catalog-error-stack");
-    const progressLabelEl = document.getElementById("catalog-error-progress-label");
-    const progressFillEl = document.getElementById("catalog-error-progress-fill");
-    const homeBtn = document.getElementById("catalog-error-home");
-
-    if (homeBtn) {
-        homeBtn.addEventListener("click", () => {
-            window.location.href = "/";
-        });
-    }
-
-    let isVisible = false;
-    let progressTimer = null;
-    let progressIndex = 0;
-    const progressSteps = [7, 19, 33, 47, 58, 72, 86];
-
-    function clearProgressTimer() {
-        if (progressTimer !== null) {
-            window.clearInterval(progressTimer);
-            progressTimer = null;
-        }
-    }
-
-    function startProgressAnimation() {
-        if (!progressFillEl || !progressLabelEl) return;
-        clearProgressTimer();
-        progressIndex = 0;
-        progressFillEl.style.width = "0%";
-        progressLabelEl.textContent = "0% готово";
-        progressTimer = window.setInterval(() => {
-            if (progressIndex >= progressSteps.length) {
-                clearProgressTimer();
-                return;
-            }
-            const value = progressSteps[progressIndex++];
-            progressFillEl.style.width = value + "%";
-            progressLabelEl.textContent = value + "% готово";
-        }, 900);
-    }
-
-    function finishProgressAnimation() {
-        if (!progressFillEl || !progressLabelEl) return;
-        clearProgressTimer();
-        progressFillEl.style.width = "100%";
-        progressLabelEl.textContent = "100% готово";
-    }
-
-    function unfoldPayload(payload) {
-        if (payload instanceof Error) {
-            return { message: payload.message || "Неизвестная ошибка", stack: payload.stack || "" };
-        }
-        if (payload && typeof payload === "object") {
-            if (payload.reason) return unfoldPayload(payload.reason);
-            if (payload.error) return unfoldPayload(payload.error);
-            let message = "";
-            if (typeof payload.message === "string" && payload.message) {
-                message = payload.message;
-            } else if (typeof payload.toString === "function") {
-                try {
-                    message = payload.toString();
-                } catch (toStringError) {
-                    message = "";
-                }
-            }
-            if (!message) {
-                message = "Неизвестная ошибка";
-            }
-            let stack = payload.stack ? String(payload.stack) : "";
-            if (!stack && "filename" in payload && "lineno" in payload && "colno" in payload) {
-                const file = payload.filename ? String(payload.filename) : "";
-                const line = Number(payload.lineno);
-                const column = Number(payload.colno);
-                const parts = [];
-                if (file) parts.push(file);
-                if (!Number.isNaN(line)) parts.push(line);
-                if (!Number.isNaN(column)) parts.push(column);
-                if (parts.length) {
-                    stack = "at " + parts.join(":");
-                }
-            }
-            return { message: String(message), stack };
-        }
-        if (typeof payload === "string") {
-            return { message: payload, stack: "" };
-        }
-        if (payload === undefined || payload === null) {
-            return { message: "Неизвестная ошибка", stack: "" };
-        }
-        try {
-            return { message: JSON.stringify(payload), stack: "" };
-        } catch (_) {
-            return { message: String(payload), stack: "" };
-        }
-    }
-
-    function showOverlay(payload) {
-        if (isVisible) return;
-        isVisible = true;
-
-        console.error("WineLink catalog runtime error:", payload);
-
-        overlay.classList.add("is-visible");
-        overlay.setAttribute("aria-hidden", "false");
-        document.body.classList.add("catalog-error-active");
-
-        const info = unfoldPayload(payload);
-        if (messageEl && info.message) {
-            messageEl.textContent = info.message;
-        }
-        if (stackEl) {
-            stackEl.textContent = info.stack || "";
-        }
-
-        startProgressAnimation();
-        window.setTimeout(finishProgressAnimation, 12000);
-        if (homeBtn) {
-            window.setTimeout(() => {
-                try {
-                    homeBtn.focus();
-                } catch (_) {
-                    /* focus may fail if button hidden */
-                }
-            }, 60);
-        }
-    }
-
-    function triggerOverlay(payload) {
-        try {
-            showOverlay(payload);
-        } catch (err) {
-            console.error("WineLink catalog error handler failed:", err, payload);
-        }
-    }
-
-    function syntheticFromOnError(message, source, lineno, colno, error) {
-        if (error) return error;
-        const fallback = new Error(message || "Неизвестная ошибка");
-        if (source) {
-            const line = Number.isFinite(lineno) ? lineno : "";
-            const column = Number.isFinite(colno) ? colno : "";
-            const parts = [source];
-            if (line !== "") parts.push(line);
-            if (column !== "") parts.push(column);
-            fallback.stack = "at " + parts.join(":");
-        }
-        return fallback;
-    }
-
-    window.addEventListener("error", function (event) {
-        const payload = event && typeof event.error !== "undefined" ? event.error : event;
-        triggerOverlay(payload);
-    });
-
-    window.addEventListener("unhandledrejection", function (event) {
-        const payload = event && typeof event.reason !== "undefined" ? event.reason : event;
-        triggerOverlay(payload);
-    });
-
-    window.addEventListener("error", function (event) {
-        const payload = event && typeof event.error !== "undefined" ? event.error : event;
-        triggerOverlay(payload);
-    }, true);
-
-    window.addEventListener("unhandledrejection", function (event) {
-        const payload = event && typeof event.reason !== "undefined" ? event.reason : event;
-        triggerOverlay(payload);
-    }, true);
-
-    window.onerror = function onCatalogError(message, source, lineno, colno, error) {
-        triggerOverlay(syntheticFromOnError(message, source, lineno, colno, error));
-        return false;
-    };
-
-    window.WineLinkCatalogBsod = {
-        show: triggerOverlay,
-        isVisible: function () {
-            return isVisible;
-        }
-    };
-})();
-const dangerButton = document.getElementById("danger-self-crash");
-if (dangerButton) {
-    dangerButton.addEventListener("click", () => {
-        const manualError = new Error("Самокраш активирован пользователем");
-        if (window.WineLinkCatalogBsod && typeof window.WineLinkCatalogBsod.show === "function") {
-            window.WineLinkCatalogBsod.show(manualError);
-        } else {
-            throw manualError;
-        }
-    });
-}
 const countryMap = {
     russia: "Россия",
     usa: "США",
@@ -1126,6 +809,12 @@ const countryMap = {
 const colorMap = { red: "Красное", white: "Белое", pink: "Розовое" };
 const sugarMap = { dry: "Сухое", semidry: "Полусухое", brut: "Брют", sweet: "Сладкое" , semisweet: "Полусладкое"};
 
+const DEV_TRIGGER_PHRASE = "великий дух база данных 1234";
+const DEV_STORAGE_KEY = "winelink-dev-mode";
+const devStrip = document.getElementById("dev-strip");
+const devAddButton = document.getElementById("dev-add-button");
+let devMode = false;
+
 // данные
 const allVines = {{ vines|tojson }};
 const presetFilters = {{ applyed_filters|tojson }};
@@ -1143,6 +832,9 @@ const filterToggleButton = document.getElementById("filters-toggle");
 const filterCloseButton = document.getElementById("filters-close");
 const filterClearButton = document.getElementById("filters-clear");
 const filterBackdrop = document.getElementById("filters-backdrop");
+const nameInputEl = document.querySelector("#filter-name");
+const sparklingInputEl = document.querySelector("#filter-sparkling");
+const bokalInputEl = document.getElementById("filter-bokal");
 
 function setFilterPopupState(isOpen) {
     if (!filterToggleButton) return;
@@ -1242,6 +934,56 @@ const filterState = {
     sugar: new Set()
 };
 
+function syncDevStripVisibility() {
+    if (!devStrip) return;
+    devStrip.hidden = !devMode;
+    devStrip.setAttribute("aria-hidden", devMode ? "false" : "true");
+}
+
+function setDevMode(on, reason) {
+    devMode = !!on;
+    document.body.classList.toggle("dev-mode", devMode);
+    syncDevStripVisibility();
+    try {
+        if (devMode) {
+            localStorage.setItem(DEV_STORAGE_KEY, "on");
+        } else {
+            localStorage.removeItem(DEV_STORAGE_KEY);
+        }
+    } catch (_) {
+        /* localStorage may be unavailable */
+    }
+    if (devMode && devStrip) {
+        const note = devStrip.querySelector(".dev-strip__note");
+        if (note && reason === "phrase") {
+            note.textContent = "Режим разработчика активирован кодовой фразой.";
+        }
+    }
+}
+
+function restoreDevMode() {
+    try {
+        if (localStorage.getItem(DEV_STORAGE_KEY) === "on") {
+            setDevMode(true, "stored");
+        }
+    } catch (_) {
+        /* ignore storage errors */
+    }
+}
+
+function checkDevTrigger(value) {
+    if (!value) return false;
+    const normalized = value.trim().toLowerCase();
+    if (normalized === DEV_TRIGGER_PHRASE) {
+        setDevMode(true, "phrase");
+        if (nameInputEl) {
+            nameInputEl.value = "";
+        }
+        filterState.name = "";
+        return true;
+    }
+    return false;
+}
 
 const filterMaps = {
     country: countryMap,
@@ -1265,9 +1007,13 @@ const sortedFilterOptions = {
     region: sortFilterValues(filterOptions.region)
 };
 
+syncDevStripVisibility();
+restoreDevMode();
+
 function resetFilters() {
     filterState.name = "";
     filterState.sparkling = false;
+    filterState.bokal = false;
     filterState.country = new Set();
     filterState.color = new Set();
     filterState.region = new Set();
@@ -1279,6 +1025,9 @@ function resetFilters() {
     }
     if (sparklingInputEl) {
         sparklingInputEl.checked = false;
+    }
+    if (bokalInputEl) {
+        bokalInputEl.checked = false;
     }
 
     filterVines();
@@ -1361,6 +1110,11 @@ function createWineCardMarkup(v, priceId, isSub = false) {
                 aria-label="Скрыть цену"
                 title="Нажмите, чтобы скрыть цену"
             >${priceText}</div>
+            <div class="dev-actions" data-wine-id="${v.id || ""}">
+                <a class="dev-action-button" href="/winery/manage?wine_id=${v.id || ""}" target="_blank" rel="noopener" data-edit-link>
+                    Редактировать
+                </a>
+            </div>
         </div>
     `;
 }
@@ -1397,7 +1151,9 @@ function sortFilterValues(values, map) {
         const textB = map && map[b] ? map[b] : b;
         return textA.toString().toLowerCase().localeCompare(textB.toString().toLowerCase(), "ru");
     });
-}function renderFilterGroup(key, values, skipSort) {
+}
+
+function renderFilterGroup(key, values, skipSort) {
     const container = filterContainers[key];
     if (!container) return;
 
@@ -1548,6 +1304,17 @@ function handleCatalogClick(event) {
     const target = event.target || event.srcElement;
     if (!target) return;
 
+    const devEditButton = findParentByClass(target, "dev-action-button");
+    if (devEditButton) {
+        event.preventDefault();
+        event.stopPropagation();
+        const href = devEditButton.getAttribute("href");
+        if (href) {
+            window.open(href, "_blank");
+        }
+        return;
+    }
+
     const toggleButton = findParentByClass(target, "toggle-price");
     if (toggleButton) {
         event.preventDefault();
@@ -1667,7 +1434,9 @@ function renderSortedVines(vines, criterion) {
 
     sortedList.appendChild(fragment);
     animateCards(cardsToAnimate);
-}function filterVines() {
+}
+
+function filterVines() {
     const countries = Array.from(filterState.country);
     const sparklingChecked = !!filterState.sparkling;
     const allowedRegionsRaw = allVines
@@ -1733,7 +1502,9 @@ function renderSortedVines(vines, criterion) {
     renderVines(filteredVines);
     updateSorted();
     updateColorHighlight();
-}function updateSorted() {
+}
+
+function updateSorted() {
     if (!filteredVines.length) {
         sortedList.style.display = "none";
         list.style.display = "block";
@@ -1765,6 +1536,9 @@ function applyPresetFilters() {
             } else {
                 filterState.name = nameInput.value || "";
             }
+            if (checkDevTrigger(nameInput.value || "")) {
+                nameInput.value = "";
+            }
         }
         const sparklingInput = document.querySelector("#filter-sparkling");
         if (sparklingInput) {
@@ -1773,6 +1547,15 @@ function applyPresetFilters() {
                 filterState.sparkling = !!pf.sparkling;
             } else {
                 filterState.sparkling = sparklingInput.checked;
+            }
+        }
+        const bokalPreset = document.getElementById("filter-bokal");
+        if (bokalPreset) {
+            if ("bokal" in pf) {
+                bokalPreset.checked = !!pf.bokal;
+                filterState.bokal = !!pf.bokal;
+            } else {
+                filterState.bokal = bokalPreset.checked;
             }
         }
 
@@ -1786,6 +1569,7 @@ function applyPresetFilters() {
     } catch (e) {
         filterState.name = "";
         filterState.sparkling = false;
+        filterState.bokal = false;
         filterState.country = new Set();
         filterState.color = new Set();
         filterState.region = new Set();
@@ -1806,17 +1590,19 @@ function applyPresetFilters() {
     }
 }
 
-const nameInputEl = document.querySelector("#filter-name");
 if (nameInputEl) {
     filterState.name = nameInputEl.value || "";
+    checkDevTrigger(filterState.name);
     nameInputEl.addEventListener("input", () => {
-        filterState.name = nameInputEl.value || "";
+        const value = nameInputEl.value || "";
+        if (checkDevTrigger(value)) {
+            filterVines();
+            return;
+        }
+        filterState.name = value;
         filterVines();
     });
 }
-
-const sparklingInputEl = document.querySelector("#filter-sparkling");
-const bokalInputEl = document.getElementById("filter-bokal");
 
 if (sparklingInputEl) {
     filterState.sparkling = sparklingInputEl.checked;
